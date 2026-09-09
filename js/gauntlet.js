@@ -21,7 +21,7 @@ window.VIEWS = window.VIEWS || {};
 
   VIEWS.gauntlet = {
     render: function () {
-      return '<div class="qz-stage"><div id="gt-slot">' + intro() + '</div></div>';
+      return '<div class="stage"><div id="gt-slot">' + intro() + '</div></div>';
     },
     mount: function () {
       wireIntro();
@@ -39,7 +39,7 @@ window.VIEWS = window.VIEWS || {};
   function intro() {
     var best = STORE.s.gauntlet || { score: 0, streak: 0, runs: 0, cleared: 0 };
     var h = '<div class="gt-intro">';
-    h += '<div class="gt-skull">&#128128;</div>';
+    h += '<div class="gt-mark">&#128128;</div>';
     h += '<h1 class="gt-title">The Gauntlet</h1>';
     h += '<p class="gt-sub">' + LENGTH + ' questions. Three lives. Fifteen seconds each.<br>' +
          'Consecutive correct answers build a multiplier. One wrong answer resets it.</p>';
@@ -128,25 +128,25 @@ window.VIEWS = window.VIEWS || {};
     var h = '';
     h += '<div class="gt-hud">';
     h += '<div class="gt-lives">';
-    for (var i = 0; i < 3; i++) h += '<span class="' + (i < g.lives ? 'heart' : 'heart dead') + '">&#10084;</span>';
+    for (var i = 0; i < 3; i++) h += '<span class="pip' + (i < g.lives ? '' : ' dead') + '"></span>';
     h += '</div>';
-    h += '<div class="gt-score"><b id="gt-score">' + Math.round(g.score).toLocaleString() + '</b><span>points</span></div>';
+    h += '<div class="gt-score" id="gt-score">' + Math.round(g.score).toLocaleString() + '</div>';
     h += '<div class="gt-combo" style="' + (g.combo >= 3 ? 'color:' + t.color : '') + '">' +
          (g.combo >= 2 ? '&times;' + t.mult + ' <em>' + (t.label || '') + '</em>' :
           '<span class="dim">no combo</span>') + '</div>';
     h += '<div class="gt-count">' + (g.i + 1) + ' / ' + g.items.length + '</div>';
     h += '</div>';
 
-    h += '<div class="gt-fuse-track"><i id="gt-fuse" style="width:100%"></i></div>';
+    h += '<div class="fuse"><i id="gt-fuse" style="width:100%"></i></div>';
     h += '<div class="gt-secs"><span id="gt-secs">15.0</span>s</div>';
 
-    h += '<div class="fc-meta" style="margin-top:14px">';
-    h += '<span class="dom-dot" style="background:' + dom.color + '"></span>';
-    h += '<span class="dim" style="font-size:12.5px">' + dom.short + '</span>';
+    h += '<div class="stage-head" style="margin-top:14px">';
+    h += '<span class="spine" style="background:' + dom.color + '"></span>';
+    h += '<span class="where">' + dom.short + '</span>';
     h += '<span class="pill ' + item.d + '">' + item.d + '</span>';
     h += '</div>';
 
-    h += '<h2 class="qz-q">' + UI.esc(item.q) + '</h2>';
+    h += '<h2 class="qz-q">' + UI.line(item.q) + '</h2>';
     item.choices.forEach(function (c, idx) {
       var cls = 'choice';
       if (g.locked) {
@@ -155,11 +155,11 @@ window.VIEWS = window.VIEWS || {};
         else if (idx === g.picked) cls += ' wrong';
       }
       h += '<div class="' + cls + '" data-pick="' + idx + '">' +
-           '<span class="key">' + 'ABCD'[idx] + '</span><span>' + UI.esc(c) + '</span></div>';
+           '<span class="key">' + 'ABCD'[idx] + '</span><span>' + UI.line(c) + '</span></div>';
     });
 
     if (g.locked) {
-      h += '<div class="qz-why">' + UI.rich(item.why) + '</div>';
+      h += '<div class="why">' + UI.rich(item.why) + '</div>';
       h += '<div class="btn-row mt" style="justify-content:flex-end">' +
            '<button class="btn primary" id="gt-next">Next <span class="kbd" style="margin-left:6px">&#8629;</span></button></div>';
     }
@@ -250,7 +250,7 @@ window.VIEWS = window.VIEWS || {};
     var acc = Math.round(g.right / Math.max(1, g.i + (g.lives <= 0 ? 1 : 0)) * 100);
 
     var h = '<div class="gt-intro">';
-    h += '<div class="gt-skull">' + (cleared ? '&#127942;' : '&#128128;') + '</div>';
+    h += '<div class="gt-mark">' + (cleared ? '&#127942;' : '&#128128;') + '</div>';
     h += '<h1 class="gt-title">' + (cleared ? 'Gauntlet cleared' : 'Out of lives') + '</h1>';
     h += '<p class="gt-sub">' + (cleared
       ? 'All ' + g.items.length + ' survived. That is interview stamina.'

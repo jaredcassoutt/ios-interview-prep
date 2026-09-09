@@ -4,12 +4,12 @@
   'use strict';
 
   var DOMAINS = {
-    language:     { name: 'Language Fundamentals',      color: '#5b8cff', short: 'Language' },
-    foundation:   { name: 'Foundation Data Structures', color: '#3ddc97', short: 'Foundation' },
-    uikit:        { name: 'UI & View Hierarchy',        color: '#ffc247', short: 'UIKit' },
-    concurrency:  { name: 'Concurrency & Threading',    color: '#ff6b6b', short: 'Concurrency' },
-    architecture: { name: 'Architecture & Design',      color: '#b085ff', short: 'Architecture' },
-    performance:  { name: 'Performance & Network',      color: '#ff8a4c', short: 'Performance' }
+    language:     { name: 'Language fundamentals',      color: '#6d8cff', short: 'Language' },
+    foundation:   { name: 'Foundation data structures', color: '#2ed3a3', short: 'Foundation' },
+    uikit:        { name: 'UI and view hierarchy',      color: '#ffc233', short: 'UIKit' },
+    concurrency:  { name: 'Concurrency and threading',  color: '#ff5470', short: 'Concurrency' },
+    architecture: { name: 'Architecture and design',    color: '#a97bff', short: 'Architecture' },
+    performance:  { name: 'Performance and network',    color: '#29c7e8', short: 'Performance' }
   };
 
   // Stable 32-bit hash so card identity survives content edits/reordering.

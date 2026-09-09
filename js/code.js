@@ -35,13 +35,13 @@ window.VIEWS = window.VIEWS || {};
     items.forEach(function (c) {
       var done = STORE.s.challenges[c.id];
       var dom = IPREP.domainOf(c.domain);
-      h += '<div class="row" data-goto="#/code?id=' + c.id + '">';
-      h += '<span class="dom-dot" style="background:' + dom.color + '"></span>';
+      h += '<div class="row" data-goto="#/code?id=' + c.id + '" style="--spine:' + dom.color + '">';
+      
       h += '<div class="row-body"><b>' + UI.esc(c.title) + '</b>';
       h += '<span>' + dom.short + ' &middot; ' + c.minutes + ' min' +
            (done && done.noHints ? ' &middot; solved with no hints' : '') + '</span></div>';
       h += '<span class="pill ' + c.d + '">' + c.d + '</span>';
-      h += done ? '<span class="row-done">&#10003;</span>' : '<span class="dim">&rsaquo;</span>';
+      h += done ? '<span class="row-done">&#10003;</span>' : '<span class="chev">&rsaquo;</span>';
       h += '</div>';
     });
     h += '</div>';
@@ -73,7 +73,7 @@ window.VIEWS = window.VIEWS || {};
     var h = '';
     h += '<div class="spread" style="margin-bottom:16px">';
     h += '<a class="btn ghost tiny" href="#/code">&larr; All challenges</a>';
-    h += '<span class="qz-timer" id="ch-timer">0:00 / ' + c.minutes + ':00</span>';
+    h += '<span class="clock" id="ch-timer">0:00 / ' + c.minutes + ':00</span>';
     h += '</div>';
 
     h += '<div class="page-head"><h1>' + UI.esc(c.title) + '</h1>';
@@ -84,8 +84,8 @@ window.VIEWS = window.VIEWS || {};
 
     h += '<div class="card" style="margin-bottom:18px">' + UI.rich(c.prompt) + '</div>';
 
-    h += '<div class="sec-title">Your answer</div>';
-    h += '<div class="editor-wrap"><pre id="ch-hl"></pre><textarea id="ch-ed" spellcheck="false"></textarea></div>';
+    h += '<div class="sec">Your answer</div>';
+    h += '<div class="editor"><pre id="ch-hl"></pre><textarea id="ch-ed" spellcheck="false"></textarea></div>';
     h += '<div class="dim" style="font-size:11.5px;margin-top:7px">Saved locally as you type. Tab inserts four spaces.</div>';
 
     h += '<div class="btn-row mt2">';
@@ -144,7 +144,7 @@ window.VIEWS = window.VIEWS || {};
       if (!el) return;
       var s = (Date.now() - state.started) / 1000;
       el.textContent = UI.fmtTime(s) + ' / ' + c.minutes + ':00';
-      el.className = 'qz-timer' + (s > c.minutes * 60 ? ' danger' : s > c.minutes * 45 ? ' warn' : '');
+      el.className = 'clock' + (s > c.minutes * 60 ? ' danger' : s > c.minutes * 45 ? ' warn' : '');
     }, 500);
 
     /* hints */
@@ -152,9 +152,9 @@ window.VIEWS = window.VIEWS || {};
       if (state.hintsShown >= c.hints.length) return;
       state.hintsShown++;
       var box = document.getElementById('ch-hints');
-      var h = '<div class="sec-title" style="margin-top:0">Hints</div>';
+      var h = '<div class="sec" style="margin-top:0">Hints</div>';
       for (var i = 0; i < state.hintsShown; i++) {
-        h += '<div class="hint"><b>Hint ' + (i + 1) + '.</b> ' + UI.esc(c.hints[i]) + '</div>';
+        h += '<div class="note hint"><b>Hint ' + (i + 1) + '.</b> ' + UI.esc(c.hints[i]) + '</div>';
       }
       box.innerHTML = h;
       var left = c.hints.length - state.hintsShown;
@@ -167,10 +167,10 @@ window.VIEWS = window.VIEWS || {};
       state.solutionShown = true;
       var box = document.getElementById('ch-solution-box');
       box.innerHTML =
-        '<div class="sec-title" style="margin-top:0">Reference solution</div>' +
+        '<div class="sec" style="margin-top:0">Reference solution</div>' +
         '<pre class="code">' + UI.swift(c.solution) + '</pre>' +
-        '<div class="sec-title">What the interviewer is checking</div>' +
-        '<div class="checking">' + UI.rich(c.checking) + '</div>';
+        '<div class="sec">What the interviewer is checking</div>' +
+        '<div class="note check">' + UI.rich(c.checking) + '</div>';
       box.scrollIntoView({ behavior: 'smooth', block: 'start' });
       this.disabled = true;
       this.textContent = 'Solution shown';

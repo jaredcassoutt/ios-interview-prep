@@ -393,14 +393,36 @@
 
   function activeDays() { return Object.keys(S.days).filter(function (k) { return S.days[k].cards || S.days[k].quizQ || S.days[k].challenges || S.days[k].mocks; }).length; }
 
-  function last14() {
+  function last14() { return lastN(14); }
+
+  function lastN(n) {
     var out = [];
-    for (var i = 13; i >= 0; i--) {
+    for (var i = n - 1; i >= 0; i--) {
       var k = todayKey(Date.now() - i * DAY);
       var d = S.days[k];
       out.push({ k: k, n: d ? d.cards + d.quizQ : 0 });
     }
+    // Mark the trailing unbroken run so the UI can show the streak itself.
+    var inRun = true;
+    for (var j = out.length - 1; j >= 0; j--) {
+      if (inRun && out[j].n > 0) out[j].run = true;
+      else if (out[j].n === 0 && j !== out.length - 1) inRun = false;
+      else if (out[j].n === 0) { /* today may be empty without breaking it */ }
+    }
     return out;
+  }
+
+  /// What each grade would schedule, in days, without committing anything.
+  function previewIntervals(card) {
+    var st = S.cards[card.key] || { e: 2.5, i: 0, due: 0, r: 0, l: 0 };
+    function project(g) {
+      var e = st.e, i = st.i, r = st.r;
+      if (g === 0) return 0;
+      if (g === 1) return Math.min(365, r === 0 ? 1 : Math.max(1, i * 1.2));
+      if (g === 2) return Math.min(365, r === 0 ? 1 : (r === 1 ? 3 : i * e));
+      return Math.min(365, r === 0 ? 3 : i * Math.min(2.8, e + 0.15) * 1.3);
+    }
+    return [0, 1, 2, 3].map(project);
   }
 
   window.STORE = {
@@ -417,6 +439,7 @@
     completeChallenge: completeChallenge, completeMock: completeMock,
     recordGauntlet: recordGauntlet,
     checkBadges: checkBadges, badgeCount: badgeCount,
-    shuffle: shuffle, activeDays: activeDays, last14: last14
+    shuffle: shuffle, activeDays: activeDays, last14: last14, lastN: lastN,
+    previewIntervals: previewIntervals
   };
 })();

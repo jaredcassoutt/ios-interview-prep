@@ -32,18 +32,18 @@ window.VIEWS = window.VIEWS || {};
       if (only && only !== dId) return;
       var d = IPREP.DOMAINS[dId];
       var ts = IPREP.topicsIn(dId);
-      h += '<div class="sec-title">' + d.name + '</div>';
+      h += '<div class="sec">' + d.name + '</div>';
       h += '<div class="card" style="padding:6px">';
       ts.forEach(function (t) {
         var m = STORE.topicMastery(t.id);
         var newCards = t.cards.filter(function (c) { return !STORE.cardState(c.key); }).length;
-        h += '<div class="topic-row" data-goto="#/topics?id=' + t.id + '">';
-        h += '<span class="dom-dot" style="background:' + d.color + '"></span>';
-        h += '<span class="tn">' + UI.esc(t.title) +
+        h += '<div class="trow" data-goto="#/topics?id=' + t.id + '" style="--spine:' + d.color + '">';
+        
+        h += '<span class="tname" style="padding-left:11px">' + UI.esc(t.title) +
              '<span class="dim" style="font-size:11.5px"> &nbsp;' + t.cards.length + ' cards &middot; ' +
              t.quiz.length + ' quiz' + (newCards ? ' &middot; ' + newCards + ' new' : '') + '</span></span>';
-        h += '<span class="bar"><i style="width:' + (m * 100) + '%;background:' + d.color + '"></i></span>';
-        h += '<span class="pct">' + Math.round(m * 100) + '%</span>';
+        h += '<span class="tbar"><i style="width:' + (m * 100) + '%;background:' + d.color + '"></i></span>';
+        h += '<span class="tpct">' + Math.round(m * 100) + '%</span>';
         h += '</div>';
       });
       h += '</div>';
@@ -82,14 +82,14 @@ window.VIEWS = window.VIEWS || {};
     });
     h += '</div>';
 
-    h += '<div class="sec-title">Every card in this topic</div>';
+    h += '<div class="sec">Every card in this topic</div>';
     h += '<div class="card" style="padding:8px">';
     t.cards.forEach(function (c) {
       var st = STORE.cardState(c.key);
-      h += '<div class="topic-row" style="cursor:default">';
+      h += '<div class="trow" style="cursor:default">';
       h += '<span class="pill ' + c.d + '">' + c.d[0].toUpperCase() + '</span>';
-      h += '<span class="tn" style="white-space:normal">' + UI.esc(c.q) + '</span>';
-      h += '<span class="pct">' + (st ? UI.relDays(st.due) : 'new') + '</span>';
+      h += '<span class="tname" style="white-space:normal">' + UI.line(c.q) + '</span>';
+      h += '<span class="tpct">' + (st ? UI.relDays(st.due) : 'new') + '</span>';
       h += '</div>';
     });
     h += '</div>';

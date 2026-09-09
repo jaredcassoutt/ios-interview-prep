@@ -10,6 +10,8 @@ Two options:
 1. **Double-click `index.html`.** It works straight off the file system, which is why the
    content lives in `.js` files rather than JSON.
 2. **Double-click `start.command`** to serve it at `http://localhost:8777` and open a browser.
+   It uses the bundled `serve.js` (Node). Avoid `python3 -m http.server` here: it drops
+   parallel requests for this many files, and the page will report incomplete content.
 
 ## What's in it
 
@@ -69,6 +71,20 @@ Progress is written to the browser's `localStorage`, keyed to the origin. In pra
 
 Settings has **Download backup** and **Restore from file** for moving progress between
 devices, plus a copy/paste text version for when a file is inconvenient.
+
+## Design
+
+Neutral chassis, chromatic content. The greys are deliberately neutral so the six domain
+hues carry the identity: blue, mint, amber, coral, violet, cyan. Domain colour appears
+structurally, as spines on rows and fills in the readiness chart, never as decoration.
+Primary buttons are white, because a bright accent would compete with six domain colours.
+
+The overview leads with a readiness chart rather than a completion ring: one column per
+domain, height as mastery, so a glance tells you which domain will sink the interview.
+
+Type is Space Grotesk for display and chrome, the system stack for long answer prose, and
+JetBrains Mono for code. Fonts load from Google Fonts with a system fallback, so the page
+still works offline, just in the fallback face.
 
 ## Deploying
 

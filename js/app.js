@@ -42,15 +42,15 @@
     var s = STORE.s;
 
     document.getElementById('level-box').innerHTML =
-      '<div class="level-top"><span class="level-title">' + lvl.title + '</span>' +
-      '<span class="level-num">LV ' + lvl.level + '</span></div>' +
+      '<div class="lvl-row"><span class="lvl-name">' + lvl.title + '</span>' +
+      '<span class="lvl-num">' + lvl.level + '/' + STORE.LEVELS.length + '</span></div>' +
       '<div class="xpbar"><i style="width:' + lvl.pct + '%"></i></div>' +
-      '<div class="level-xp">' + lvl.xp + ' XP' + (lvl.max ? '' : ' &middot; ' + (lvl.need - lvl.into) + ' to go') + '</div>';
+      '<div class="lvl-xp">' + lvl.xp.toLocaleString() + ' XP' +
+      (lvl.max ? '' : ', ' + (lvl.need - lvl.into) + ' to go') + '</div>';
 
     document.getElementById('streak-box').innerHTML =
-      '<span class="streak-flame">' + (s.streak.count > 0 ? '&#128293;' : '&#127807;') + '</span>' +
-      '<span class="streak-n">' + s.streak.count + '</span>' +
-      '<span class="streak-l">day<br>streak</span>';
+      '<div class="streak-row' + (s.streak.count > 0 ? ' live' : '') + '">' +
+      '<b>' + s.streak.count + '</b><span>day streak</span></div>';
 
     var due = STORE.dueCount();
     document.getElementById('nav-due').textContent = due > 0 ? (due > 99 ? '99+' : due) : '';
@@ -208,7 +208,48 @@
 
   /* ---------- boot ---------- */
 
+  // With no build step the app is 18 separate script tags. If one fails to
+  // arrive, the page would otherwise render confidently wrong numbers.
+  // Check the content actually loaded and say so plainly if it did not.
+  var EXPECT = { topics: 30, challenges: 25, mocks: 18, badges: 39 };
+
+  function contentIsComplete() {
+    return IPREP.topics.length >= EXPECT.topics &&
+           IPREP.challenges.length >= EXPECT.challenges &&
+           IPREP.mocks.length >= EXPECT.mocks &&
+           IPREP.badges.length >= EXPECT.badges;
+  }
+
+  function showLoadFailure() {
+    var missing = [];
+    if (IPREP.topics.length < EXPECT.topics)
+      missing.push((EXPECT.topics - IPREP.topics.length) + ' topics');
+    if (IPREP.challenges.length < EXPECT.challenges)
+      missing.push((EXPECT.challenges - IPREP.challenges.length) + ' coding challenges');
+    if (IPREP.mocks.length < EXPECT.mocks)
+      missing.push((EXPECT.mocks - IPREP.mocks.length) + ' mock prompts');
+    if (IPREP.badges.length < EXPECT.badges)
+      missing.push('the badge set');
+
+    document.getElementById('view').innerHTML =
+      '<div class="empty"><h3>Some content did not load</h3>' +
+      '<p>Missing ' + missing.join(', ') + '. Your saved progress is untouched. ' +
+      'Reload to fetch the rest.</p>' +
+      '<div class="btn-row" style="justify-content:center;margin-top:20px">' +
+      '<button class="btn primary" id="reload-now">Reload</button></div></div>';
+    document.getElementById('reload-now').addEventListener('click', function () {
+      location.reload();
+    });
+    console.warn('[iprep] incomplete content load:', missing.join(', '));
+  }
+
   function boot() {
+    if (!contentIsComplete()) {
+      document.getElementById('btn-settings').addEventListener('click', openSettings);
+      showLoadFailure();
+      return;
+    }
+
     // "Comeback" detection before anything writes today's entry.
     var last = STORE.s.streak.last;
     if (last) {

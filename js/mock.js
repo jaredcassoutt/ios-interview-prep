@@ -20,14 +20,14 @@ window.VIEWS = window.VIEWS || {};
     IPREP.mocks.forEach(function (m) {
       var rec = STORE.s.mocks[m.id];
       var dom = IPREP.domainOf(m.domain);
-      h += '<div class="row" data-goto="#/mock?id=' + m.id + '">';
-      h += '<span class="dom-dot" style="background:' + dom.color + '"></span>';
+      h += '<div class="row" data-goto="#/mock?id=' + m.id + '" style="--spine:' + dom.color + '">';
+      
       h += '<div class="row-body"><b>' + UI.esc(m.title) + '</b>';
       h += '<span>' + dom.short + ' &middot; ' + m.minutes + ' min &middot; ' + m.rubric.length + ' rubric points';
       if (rec) h += ' &middot; last score ' + rec.hits + '/' + rec.total;
       h += '</span></div>';
       h += '<span class="pill ' + m.d + '">' + m.d + '</span>';
-      h += rec ? '<span class="row-done">&#10003;</span>' : '<span class="dim">&rsaquo;</span>';
+      h += rec ? '<span class="row-done">&#10003;</span>' : '<span class="chev">&rsaquo;</span>';
       h += '</div>';
     });
     h += '</div>';
@@ -52,7 +52,7 @@ window.VIEWS = window.VIEWS || {};
 
     h += '<div class="card" style="font-size:15.5px;line-height:1.6">' + UI.rich(m.prompt) + '</div>';
 
-    h += '<div class="card mt2"><div class="big-timer" id="mk-timer">0:00</div>' +
+    h += '<div class="card mt2"><div class="big-clock" id="mk-timer">0:00</div>' +
          '<div class="btn-row" style="justify-content:center">' +
          '<button class="btn primary" id="mk-start">Start talking</button>' +
          '<button class="btn" id="mk-reveal">Show rubric</button>' +
@@ -100,11 +100,11 @@ window.VIEWS = window.VIEWS || {};
     var box = document.getElementById('mk-rubric');
     var hits = Object.keys(st.hits).filter(function (k) { return st.hits[k]; }).length;
 
-    var h = '<div class="sec-title" style="margin-top:0">Rubric &mdash; tick everything you actually said</div>';
+    var h = '<div class="sec" style="margin-top:0">Rubric &mdash; tick everything you actually said</div>';
     h += '<div class="card" style="padding:8px">';
     m.rubric.forEach(function (r, i) {
       h += '<div class="rubric-item' + (st.hits[i] ? ' hit' : '') + '" data-r="' + i + '">';
-      h += '<span class="rubric-box">&#10003;</span><span>' + UI.esc(r) + '</span></div>';
+      h += '<span class="rbox">&#10003;</span><span>' + UI.esc(r) + '</span></div>';
     });
     h += '</div>';
 
@@ -116,7 +116,7 @@ window.VIEWS = window.VIEWS || {};
     h += '<button class="btn primary" id="mk-save">Log this attempt</button>';
     h += '</div>';
 
-    h += '<div class="sec-title">Follow-ups you should expect</div>';
+    h += '<div class="sec">Follow-ups you should expect</div>';
     h += '<div class="card"><ul class="rubric" style="margin:0;padding-left:19px">';
     m.followups.forEach(function (f) { h += '<li>' + UI.esc(f) + '</li>'; });
     h += '</ul></div>';

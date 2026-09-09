@@ -89,7 +89,7 @@
   fit(); addEventListener('resize', fit);
 
   function confetti(n, colors) {
-    colors = colors || ['#5b8cff', '#3ddc97', '#ffc247', '#ff6b6b', '#b085ff', '#ff8a4c'];
+    colors = colors || ['#6d8cff', '#2ed3a3', '#ffc233', '#ff5470', '#a97bff', '#29c7e8'];
     for (var i = 0; i < (n || 90); i++) {
       parts.push({
         x: cv.width / 2 + (Math.random() - 0.5) * cv.width * 0.45,
@@ -122,13 +122,20 @@
   }
 
   /* ---------- modal ---------- */
+  // Inline display beats any stylesheet rule, so a stale cached CSS file
+  // can never leave the backdrop stuck over the page.
   function modal(html) {
     var back = document.getElementById('modal');
     document.getElementById('modal-body').innerHTML = html;
-    back.hidden = false;
+    back.style.display = 'grid';
+    back.removeAttribute('hidden');
     back.onclick = function (e) { if (e.target === back) closeModal(); };
   }
-  function closeModal() { document.getElementById('modal').hidden = true; }
+  function closeModal() {
+    var back = document.getElementById('modal');
+    back.style.display = 'none';
+    back.setAttribute('hidden', '');
+  }
 
   /* ---------- small helpers ---------- */
   function ring(pct, size, stroke, color) {
@@ -155,7 +162,7 @@
   }
 
   window.UI = {
-    esc: esc, swift: swift, rich: rich, toast: toast, confetti: confetti,
+    esc: esc, swift: swift, rich: rich, line: inline, toast: toast, confetti: confetti,
     modal: modal, closeModal: closeModal, ring: ring, fmtTime: fmtTime, relDays: relDays
   };
 })();

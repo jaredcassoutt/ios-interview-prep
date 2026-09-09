@@ -12,7 +12,7 @@ window.VIEWS = window.VIEWS || {};
           '<div class="empty"><h3>No questions match</h3><p>Try another filter.</p>' +
           '<div class="btn-row" style="justify-content:center;margin-top:16px"><a class="btn" href="#/quiz">All topics</a></div></div>';
       }
-      return '<div class="qz-stage"><div id="qz-slot"></div></div>';
+      return '<div class="stage"><div id="qz-slot"></div></div>';
     },
 
     mount: function () {
@@ -21,11 +21,11 @@ window.VIEWS = window.VIEWS || {};
       draw();
       document.addEventListener('keydown', keys);
       tick = setInterval(function () {
-        var el = document.getElementById('qz-timer');
+        var el = document.getElementById('clock');
         if (!el || q.locked) return;
         var s = (Date.now() - q.startedAt) / 1000;
         el.textContent = UI.fmtTime(s);
-        el.className = 'qz-timer' + (s > 45 ? ' danger' : s > 25 ? ' warn' : '');
+        el.className = 'clock' + (s > 45 ? ' danger' : s > 25 ? ' warn' : '');
       }, 250);
     },
 
@@ -67,19 +67,19 @@ window.VIEWS = window.VIEWS || {};
     var d = IPREP.domainOf(item.domain);
 
     var h = '';
-    h += '<div class="fc-meta">';
-    h += '<span class="dom-dot" style="background:' + d.color + '"></span>';
-    h += '<span class="dim" style="font-size:12.5px">' + UI.esc(t.title) + '</span>';
+    h += '<div class="stage-head">';
+    h += '<span class="spine" style="background:' + d.color + '"></span>';
+    h += '<span class="where">' + UI.esc(t.title) + '</span>';
     h += '<span class="pill ' + item.d + '">' + item.d + '</span>';
     var streakBadge = q.streak >= 3
       ? '<span class="pill" style="background:rgba(255,138,76,.16);color:var(--orange)">&#128293; ' + q.streak + ' in a row</span>'
       : '';
     h += streakBadge;
-    h += '<span class="prog"><span id="qz-timer" class="qz-timer">0:00</span> &nbsp; ' + (q.i + 1) + ' / ' + q.items.length + ' &nbsp; ' + q.score + ' correct</span>';
+    h += '<span class="count"><span id="qz-timer" class="clock">0:00</span> &nbsp; ' + (q.i + 1) + ' / ' + q.items.length + ' &nbsp; ' + q.score + ' correct</span>';
     h += '</div>';
 
-    h += '<div class="bar" style="margin-bottom:20px"><i style="width:' + (q.i / q.items.length * 100) + '%"></i></div>';
-    h += '<h2 class="qz-q">' + UI.esc(item.q) + '</h2>';
+    h += '<div class="progress"><i style="width:' + (q.i / q.items.length * 100) + '%"></i></div>';
+    h += '<h2 class="qz-q">' + UI.line(item.q) + '</h2>';
 
     item.choices.forEach(function (c, idx) {
       var cls = 'choice';
@@ -89,11 +89,11 @@ window.VIEWS = window.VIEWS || {};
         else if (idx === q.picked) cls += ' wrong';
       }
       h += '<div class="' + cls + '" data-pick="' + idx + '">';
-      h += '<span class="key">' + 'ABCD'[idx] + '</span><span>' + UI.esc(c) + '</span></div>';
+      h += '<span class="key">' + 'ABCD'[idx] + '</span><span>' + UI.line(c) + '</span></div>';
     });
 
     if (q.locked) {
-      h += '<div class="qz-why">' + UI.rich(item.why) + '</div>';
+      h += '<div class="why">' + UI.rich(item.why) + '</div>';
       h += '<div class="btn-row mt" style="justify-content:flex-end">' +
            '<button class="btn primary" id="qz-next">' + (q.i === q.items.length - 1 ? 'See results' : 'Next') +
            ' <span class="kbd" style="margin-left:6px">&#8629;</span></button></div>';
@@ -177,12 +177,12 @@ window.VIEWS = window.VIEWS || {};
     h += '</div></div>';
 
     if (q.missed.length) {
-      h += '<div class="sec-title">Missed &mdash; worth a flashcard pass</div>';
+      h += '<div class="sec">Missed &mdash; worth a flashcard pass</div>';
       q.missed.forEach(function (m) {
         var t = IPREP.topic(m.topic);
         h += '<div class="row" style="margin-bottom:9px" data-goto="#/flashcards?topic=' + m.topic + '">';
-        h += '<div class="row-body"><b>' + UI.esc(m.q) + '</b><span>' + UI.esc(t.title) + '</span></div>';
-        h += '<span class="dim">&rsaquo;</span></div>';
+        h += '<div class="row-body"><b>' + UI.line(m.q) + '</b><span>' + UI.esc(t.title) + '</span></div>';
+        h += '<span class="chev">&rsaquo;</span></div>';
       });
     }
 

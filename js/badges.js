@@ -19,10 +19,10 @@ VIEWS.badges = {
          lvl.xp + ' XP' + (lvl.max ? '' : ' &middot; ' + (lvl.need - lvl.into) + ' to next') + '</div>';
     h += '</div>';
     h += '<div class="xpbar"><i style="width:' + lvl.pct + '%"></i></div>';
-    h += '<div style="display:flex;gap:5px;margin-top:14px;flex-wrap:wrap">';
+    h += '<div class="ladder">';
     STORE.LEVELS.forEach(function (name, i) {
       var on = i <= lvl.index;
-      h += '<span class="pill" style="' + (on ? 'background:var(--accent-soft);color:#bdd1ff' : '') + '">' + name + '</span>';
+      h += '<span class="rung' + (on ? ' on' : '') + '">' + name + '</span>';
     });
     h += '</div></div>';
 
@@ -31,11 +31,11 @@ VIEWS.badges = {
     var locked = IPREP.badges.filter(function (b) { return !STORE.s.badges[b.id]; });
 
     if (unlocked.length) {
-      h += '<div class="sec-title">Unlocked</div><div class="grid g4">';
+      h += '<div class="sec">Unlocked</div><div class="grid g4">';
       unlocked.forEach(function (b) { h += card(b, true); });
       h += '</div>';
     }
-    h += '<div class="sec-title">Still locked</div><div class="grid g4">';
+    h += '<div class="sec">Still locked</div><div class="grid g4">';
     locked.forEach(function (b) { h += card(b, false); });
     h += '</div>';
 

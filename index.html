@@ -3,8 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
 <title>iOS Interview Prep</title>
-<link rel="stylesheet" href="css/app.css">
+<meta name="description" content="Spaced-repetition study tool for senior iOS engineering interviews.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css?v=2">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128241;</text></svg>">
 </head>
 <body>
@@ -18,25 +23,25 @@
       <div class="brand-mark">iOS</div>
       <div class="brand-text">
         <strong>Interview Prep</strong>
-        <span>30 topics &middot; 5 modes</span>
+        <span>30 topics, 5 modes</span>
       </div>
     </div>
 
     <nav class="nav">
-      <a href="#/dashboard" data-nav="dashboard"><span class="ico">&#9632;</span> Dashboard</a>
-      <a href="#/flashcards" data-nav="flashcards"><span class="ico">&#9635;</span> Flashcards <em id="nav-due"></em></a>
-      <a href="#/quiz" data-nav="quiz"><span class="ico">&#9633;</span> Quiz</a>
-      <a href="#/code" data-nav="code"><span class="ico">&#9670;</span> Code Challenges</a>
-      <a href="#/mock" data-nav="mock"><span class="ico">&#9678;</span> Mock Interview</a>
-      <a href="#/gauntlet" data-nav="gauntlet"><span class="ico">&#9679;</span> The Gauntlet</a>
-      <a href="#/topics" data-nav="topics"><span class="ico">&#9636;</span> Topics</a>
-      <a href="#/badges" data-nav="badges"><span class="ico">&#9733;</span> Badges <em id="nav-badges"></em></a>
+      <a href="#/dashboard" data-nav="dashboard"><span class="ico"></span> Overview</a>
+      <a href="#/flashcards" data-nav="flashcards"><span class="ico"></span> Flashcards <em id="nav-due"></em></a>
+      <a href="#/quiz" data-nav="quiz"><span class="ico"></span> Quiz</a>
+      <a href="#/code" data-nav="code"><span class="ico"></span> Code</a>
+      <a href="#/mock" data-nav="mock"><span class="ico"></span> Mock interview</a>
+      <a href="#/gauntlet" data-nav="gauntlet"><span class="ico"></span> The Gauntlet</a>
+      <a href="#/topics" data-nav="topics"><span class="ico"></span> Topics</a>
+      <a href="#/badges" data-nav="badges"><span class="ico"></span> Badges</a>
     </nav>
 
     <div class="sidebar-foot">
-      <div class="level-box" id="level-box"></div>
-      <div class="streak-box" id="streak-box"></div>
-      <button class="btn ghost tiny" id="btn-settings">Settings</button>
+      <div id="level-box"></div>
+      <div id="streak-box"></div>
+      <button class="btn ghost tiny" id="btn-settings" style="justify-content:center">Settings</button>
     </div>
   </aside>
 
@@ -48,36 +53,33 @@
 
 <div id="toasts"></div>
 
-<div id="modal" class="modal-backdrop" hidden>
+<div id="modal" class="modal-backdrop" style="display:none">
   <div class="modal" id="modal-body"></div>
 </div>
 
-<!-- engine -->
-<script src="js/core.js"></script>
-<script src="js/store.js"></script>
-<script src="js/ui.js"></script>
+<script src="js/core.js?v=2"></script>
+<script src="js/store.js?v=2"></script>
+<script src="js/ui.js?v=2"></script>
 
-<!-- content -->
-<script src="data/language.js"></script>
-<script src="data/foundation.js"></script>
-<script src="data/uikit.js"></script>
-<script src="data/concurrency.js"></script>
-<script src="data/architecture.js"></script>
-<script src="data/performance.js"></script>
-<script src="data/challenges.js"></script>
-<script src="data/mock.js"></script>
-<script src="data/achievements.js"></script>
+<script src="data/language.js?v=2"></script>
+<script src="data/foundation.js?v=2"></script>
+<script src="data/uikit.js?v=2"></script>
+<script src="data/concurrency.js?v=2"></script>
+<script src="data/architecture.js?v=2"></script>
+<script src="data/performance.js?v=2"></script>
+<script src="data/challenges.js?v=2"></script>
+<script src="data/mock.js?v=2"></script>
+<script src="data/achievements.js?v=2"></script>
 
-<!-- views -->
-<script src="js/dashboard.js"></script>
-<script src="js/flashcards.js"></script>
-<script src="js/quiz.js"></script>
-<script src="js/code.js"></script>
-<script src="js/mock.js"></script>
-<script src="js/topics.js"></script>
-<script src="js/badges.js"></script>
-<script src="js/gauntlet.js"></script>
-<script src="js/app.js"></script>
+<script src="js/dashboard.js?v=2"></script>
+<script src="js/flashcards.js?v=2"></script>
+<script src="js/quiz.js?v=2"></script>
+<script src="js/code.js?v=2"></script>
+<script src="js/mock.js?v=2"></script>
+<script src="js/topics.js?v=2"></script>
+<script src="js/badges.js?v=2"></script>
+<script src="js/gauntlet.js?v=2"></script>
+<script src="js/app.js?v=2"></script>
 
 </body>
 </html>
