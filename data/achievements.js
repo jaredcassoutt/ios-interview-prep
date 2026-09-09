@@ -155,6 +155,14 @@
 
   { id: 'gauntlet-score', em: '💎', name: 'Five Figures',          xp: 220,
     desc: 'Score 10,000 or more in a single Gauntlet run.',
-    check: c => c.S.gauntlet.score >= 10000 }
+    check: c => c.S.gauntlet.score >= 10000 },
+
+  { id: 'swiftui-master', em: '🪄', name: 'Declarative Thinker',  xp: 220,
+    desc: 'Master every topic in SwiftUI and declarative UI.',
+    check: c => c.domainMastered('swiftui') },
+
+  { id: 'both-uis', em: '🌉', name: 'Fluent in Both',            xp: 260,
+    desc: 'Master both the UIKit and SwiftUI domains.',
+    check: c => c.domainMastered('uikit') && c.domainMastered('swiftui') }
 
 ].forEach(function (b) { IPREP.addBadge(b); });

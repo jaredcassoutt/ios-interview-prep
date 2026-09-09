@@ -413,3 +413,74 @@ IPREP.addMock({
     'What does the API need to support offline browsing of the menu?'
   ]
 });
+
+/* ---- SwiftUI mock prompts ---- */
+
+IPREP.addMock({
+  id: 'mk-swiftui-arch', domain: 'swiftui', title: 'Architect a SwiftUI app', d: 'hard', minutes: 30,
+  prompt: 'You are starting a new SwiftUI app from scratch: a fitness tracker with a feed, a detail screen, offline history and a settings area. Walk me through the architecture, from the view layer down to persistence.',
+  rubric: [
+    'Asks about deployment target first, since iOS 17 unlocks @Observable and modern navigation',
+    'Uses @Observable model objects rather than reaching reflexively for a view model per screen',
+    'Has a clear position on whether MVVM is even needed in SwiftUI, with reasons rather than dogma',
+    'Single source of truth: state owned in one place, children take bindings or plain values',
+    'Navigation as data via NavigationStack with a typed Route enum, destinations registered near the root',
+    'Keeps the model layer free of SwiftUI imports so it stays testable and reusable',
+    'Persistence choice defended: SwiftData, Core Data or a plain store, with the trade-off named',
+    'Concurrency handled with @MainActor on models and .task for view-scoped async work',
+    'Names the SwiftUI-specific performance risks: fat observable objects, AnyView, unstable ForEach identity',
+    'Testing strategy that exercises models as plain objects, with previews and snapshots for the views'
+  ],
+  followups: [
+    'Would you write a view model for every screen? Defend your answer.',
+    'Where does networking live, and how does a view trigger it without owning it?',
+    'The feed re-renders on every scroll tick. How do you find out why?',
+    'How would this change if you had to support iOS 16?'
+  ]
+});
+
+IPREP.addMock({
+  id: 'mk-swiftui-vs-uikit', domain: 'swiftui', title: 'SwiftUI or UIKit for this screen', d: 'medium', minutes: 22,
+  prompt: 'A product manager wants a photo-heavy browse screen: a mixed grid with variable cell sizes, a horizontally scrolling carousel row, custom paging, and a hero transition into the detail view. Would you build it in SwiftUI or UIKit? Talk me through the decision.',
+  rubric: [
+    'Asks clarifying questions before choosing: deployment target, team experience, deadline, how much it will change',
+    'Recognises that compositional layout still expresses things LazyVGrid cannot',
+    'Knows that precise scroll and paging control improved in iOS 17 with scrollTargetBehavior but is still weaker',
+    'Names matchedGeometryEffect as the SwiftUI hero transition and its constraint of one source per id',
+    'Considers a hybrid: SwiftUI screen hosting a UIKit collection view, or the reverse',
+    'Raises image loading and memory, which is framework-agnostic and probably the real risk',
+    'Gives a recommendation rather than listing options and stopping',
+    'States what would change the answer, so the decision is reviewable later',
+    'Considers who maintains it and whether the team can debug SwiftUI layout issues',
+    'Does not treat the choice as ideological'
+  ],
+  followups: [
+    'You picked one. What would make you switch?',
+    'How would you hide the choice behind an interface so it can be swapped later?',
+    'The SwiftUI version drops frames on an iPhone 12. What are your first three checks?',
+    'How do you keep the design system consistent if half the app is each framework?'
+  ]
+});
+
+IPREP.addMock({
+  id: 'mk-swiftui-debug', domain: 'swiftui', title: 'Debug a SwiftUI screen', d: 'medium', minutes: 20,
+  prompt: 'A SwiftUI screen has three reported bugs: a text field loses focus mid-typing, a sheet sometimes opens blank, and the list scroll position jumps after a refresh. Walk me through diagnosing each one.',
+  rubric: [
+    'Recognises all three as symptoms of the same root cause family: identity and state ownership',
+    'Focus loss: the view is being recreated, so identity is changing under it',
+    'Names the usual identity culprits: if/else branches, .id() bound to changing data, ForEach id: \\.self',
+    'Blank sheet: .sheet(isPresented:) with a separate value that has not been set yet, or was cleared',
+    'Prescribes .sheet(item:) so the invalid state is unrepresentable',
+    'Scroll jump: unstable ForEach identity turning an update into a wholesale replacement',
+    'Uses Self._printChanges() to see whether the trigger is a property or @identity',
+    'Mentions the SwiftUI Instruments template for view body counts',
+    'Checks whether a parent is recreating a @StateObject or @ObservedObject',
+    'Proposes a regression guard rather than only fixing the three symptoms'
+  ],
+  followups: [
+    'Self._printChanges() prints @identity. What does that tell you?',
+    'The text field only loses focus on iPad. Does that change your hypothesis?',
+    'How would you prove the fix worked rather than assuming?',
+    'Which of these three would you fix first, and why?'
+  ]
+});

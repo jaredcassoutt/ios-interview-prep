@@ -17,12 +17,17 @@ Two options:
 
 | | |
 |---|---|
-| Topics | 30, across 6 domains |
-| Flashcards | ~307, scheduled with SM-2 spaced repetition |
-| Quiz questions | ~180 multiple choice, with explanations |
-| Coding challenges | 25, with hints, reference solutions, and interviewer notes |
-| Mock interview prompts | 18, with self-scoring rubrics and follow-ups |
-| Badges | 39 |
+| Topics | 38, across 7 domains |
+| Flashcards | 389, scheduled with SM-2 spaced repetition |
+| Quiz questions | 227 multiple choice, with explanations |
+| Coding challenges | 30, with hints, reference solutions, and interviewer notes |
+| Mock interview prompts | 21, with self-scoring rubrics and follow-ups |
+| Badges | 41 |
+
+The UI half of the syllabus is split deliberately: 8 SwiftUI topics against 7 UIKit ones,
+so SwiftUI is 53% of the UI content. UIKit stays because view controller lifecycle, the
+layout pass and view hierarchy questions are still asked, but declarative UI carries the
+larger share.
 
 Everything is tagged `easy` / `medium` / `hard` and filterable.
 
@@ -75,7 +80,7 @@ devices, plus a copy/paste text version for when a file is inconvenient.
 ## Design
 
 Neutral chassis, chromatic content. The greys are deliberately neutral so the six domain
-hues carry the identity: blue, mint, amber, coral, violet, cyan. Domain colour appears
+hues carry the identity: blue, mint, amber, pink, red-orange, violet, cyan. Domain colour appears
 structurally, as spines on rows and fills in the readiness chart, never as decoration.
 Primary buttons are white, because a bright accent would compete with six domain colours.
 

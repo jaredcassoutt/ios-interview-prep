@@ -89,7 +89,7 @@
   fit(); addEventListener('resize', fit);
 
   function confetti(n, colors) {
-    colors = colors || ['#6d8cff', '#2ed3a3', '#ffc233', '#ff5470', '#a97bff', '#29c7e8'];
+    colors = colors || ['#6d8cff', '#2ed3a3', '#ffc233', '#ff7ac2', '#ff5c47', '#a97bff', '#29c7e8'];
     for (var i = 0; i < (n || 90); i++) {
       parts.push({
         x: cv.width / 2 + (Math.random() - 0.5) * cv.width * 0.45,

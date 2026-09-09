@@ -21,14 +21,15 @@
   --language:#6d8cff;
   --foundation:#2ed3a3;
   --uikit:#ffc233;
-  --concurrency:#ff5470;
+  --swiftui:#ff7ac2;
+  --concurrency:#ff5c47;
   --architecture:#a97bff;
   --performance:#29c7e8;
 
   /* semantic */
   --good:#2ed3a3;
   --warn:#ffc233;
-  --bad:#ff5470;
+  --bad:#ff5c47;
 
   --r-lg:16px;
   --r:11px;
@@ -179,7 +180,7 @@ h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.03em}
 }
 .pill.easy{background:rgba(46,211,163,.13);color:var(--good)}
 .pill.medium{background:rgba(255,194,51,.13);color:var(--warn)}
-.pill.hard{background:rgba(255,84,112,.14);color:var(--bad)}
+.pill.hard{background:rgba(255,92,71,.14);color:var(--bad)}
 
 .kbd{
   font-family:var(--mono);font-size:10.5px;background:var(--raised);
@@ -369,7 +370,7 @@ h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.03em}
 }
 .choice.correct{border-color:var(--good);background:rgba(46,211,163,.09)}
 .choice.correct .key{background:var(--good);color:#04231a}
-.choice.wrong{border-color:var(--bad);background:rgba(255,84,112,.09)}
+.choice.wrong{border-color:var(--bad);background:rgba(255,92,71,.09)}
 .choice.wrong .key{background:var(--bad);color:#2d0510}
 .choice.locked{cursor:default}
 .why{
@@ -474,7 +475,7 @@ pre.code{
 
 .gt-flash{position:fixed;inset:0;pointer-events:none;z-index:80;animation:gtf .42s ease-out forwards}
 .gt-flash.good{box-shadow:inset 0 0 130px rgba(46,211,163,.4)}
-.gt-flash.bad{box-shadow:inset 0 0 130px rgba(255,84,112,.5)}
+.gt-flash.bad{box-shadow:inset 0 0 130px rgba(255,92,71,.5)}
 @keyframes gtf{from{opacity:1}to{opacity:0}}
 
 /* ============================ empty / toast / modal ============================ */

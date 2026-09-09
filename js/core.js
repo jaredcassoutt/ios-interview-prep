@@ -7,7 +7,8 @@
     language:     { name: 'Language fundamentals',      color: '#6d8cff', short: 'Language' },
     foundation:   { name: 'Foundation data structures', color: '#2ed3a3', short: 'Foundation' },
     uikit:        { name: 'UI and view hierarchy',      color: '#ffc233', short: 'UIKit' },
-    concurrency:  { name: 'Concurrency and threading',  color: '#ff5470', short: 'Concurrency' },
+    swiftui:      { name: 'SwiftUI and declarative UI', color: '#ff7ac2', short: 'SwiftUI' },
+    concurrency:  { name: 'Concurrency and threading',  color: '#ff5c47', short: 'Concurrency' },
     architecture: { name: 'Architecture and design',    color: '#a97bff', short: 'Architecture' },
     performance:  { name: 'Performance and network',    color: '#29c7e8', short: 'Performance' }
   };

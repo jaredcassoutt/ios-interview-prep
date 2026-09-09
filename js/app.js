@@ -211,7 +211,7 @@
   // With no build step the app is 18 separate script tags. If one fails to
   // arrive, the page would otherwise render confidently wrong numbers.
   // Check the content actually loaded and say so plainly if it did not.
-  var EXPECT = { topics: 30, challenges: 25, mocks: 18, badges: 39 };
+  var EXPECT = { topics: 38, challenges: 30, mocks: 21, badges: 41 };
 
   function contentIsComplete() {
     return IPREP.topics.length >= EXPECT.topics &&

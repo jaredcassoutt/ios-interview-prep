@@ -1407,3 +1407,451 @@ final class ProfileViewModel: ObservableObject {
 }`,
   checking: 'Whether you find all four, especially the stuck isLoading flag, which produces a spinner that never stops and is a real bug shipped constantly. The @MainActor rewrite should be framed as eliminating two of the bugs structurally rather than fixing them one by one.'
 });
+
+/* ---- SwiftUI challenges ---- */
+
+IPREP.addChallenge({
+  id: 'ch-stateobject', topic: 'swiftui-state', domain: 'swiftui',
+  title: 'Find the state bugs', d: 'medium', minutes: 18,
+  prompt: 'This SwiftUI screen loses its data whenever the parent redraws, and the counter resets when the filter toggles. Find every bug and fix them.',
+  starter: `final class FeedViewModel: ObservableObject {
+    @Published var posts: [Post] = []
+    func load() async { posts = await api.posts() }
+}
+
+struct FeedScreen: View {
+    @ObservedObject var vm = FeedViewModel()
+    @State var showUnreadOnly = false
+
+    var body: some View {
+        VStack {
+            Toggle("Unread only", isOn: $showUnreadOnly)
+
+            if showUnreadOnly {
+                List(vm.posts.filter(\\.isUnread)) { PostRow(post: $0) }
+            } else {
+                List(vm.posts) { PostRow(post: $0) }
+            }
+        }
+        .onAppear { Task { await vm.load() } }
+    }
+}`,
+  hints: [
+    '@ObservedObject does not own the object. What happens to the initialiser when the parent recreates this struct?',
+    'The if/else creates two different structural identities. Any state inside those branches is discarded on every toggle.',
+    'onAppear plus a manual Task does not cancel when the view disappears, and onAppear can fire more than once.'
+  ],
+  solution: `// Bugs:
+// 1. @ObservedObject var vm = FeedViewModel() recreates the view model
+//    every time the parent re-renders, wiping posts and restarting the load.
+// 2. The if/else gives the two Lists different structural identities, so any
+//    @State inside PostRow (and the scroll position) is destroyed on toggle.
+// 3. onAppear + Task is not cancelled on disappear, and onAppear can fire
+//    more than once, so load() can run concurrently with itself.
+// 4. @State should be private; it is this view's own storage.
+
+@Observable
+@MainActor
+final class FeedViewModel {
+    private(set) var posts: [Post] = []
+    private var isLoading = false
+
+    func load() async {
+        guard !isLoading else { return }      // fix 3: dedupe
+        isLoading = true
+        defer { isLoading = false }
+        posts = await api.posts()
+    }
+}
+
+struct FeedScreen: View {
+    @State private var vm = FeedViewModel()   // fix 1 and 4: this view owns it
+    @State private var showUnreadOnly = false
+
+    // fix 2: one List, one identity. The data changes, the view does not.
+    private var visible: [Post] {
+        showUnreadOnly ? vm.posts.filter(\\.isUnread) : vm.posts
+    }
+
+    var body: some View {
+        VStack {
+            Toggle("Unread only", isOn: $showUnreadOnly)
+            List(visible) { PostRow(post: $0) }
+        }
+        .task { await vm.load() }             // fix 3: cancels on disappear
+    }
+}`,
+  checking: 'Whether you can explain WHY each one breaks, not just the fix. The @ObservedObject lifetime and the if/else identity rule are the two things a senior SwiftUI candidate is expected to know cold. Collapsing the branches into one List with derived data is the move that shows you think in terms of identity rather than in terms of view code.'
+});
+
+IPREP.addChallenge({
+  id: 'ch-representable', topic: 'swiftui-interop', domain: 'swiftui',
+  title: 'Wrap a UIKit view for SwiftUI', d: 'medium', minutes: 22,
+  prompt: 'Wrap UITextView so SwiftUI can use it as a multi-line text editor with a two-way text binding. It must size itself to its content, report edits back, and not fight SwiftUI on every keystroke.',
+  starter: `struct RichTextEditor: UIViewRepresentable {
+    @Binding var text: String
+    // TODO
+}`,
+  hints: [
+    'makeUIView runs once; updateUIView runs on every dependency change. Do not allocate in updateUIView.',
+    'You need a Coordinator to adopt UITextViewDelegate and write back through the binding.',
+    'Writing the binding on every keystroke re-renders SwiftUI, which calls updateUIView, which sets text again. Guard against the echo.'
+  ],
+  solution: `struct RichTextEditor: UIViewRepresentable {
+    @Binding var text: String
+    var font: UIFont = .preferredFont(forTextStyle: .body)
+
+    func makeUIView(context: Context) -> UITextView {
+        let view = UITextView()
+        view.delegate = context.coordinator
+        view.font = font
+        view.backgroundColor = .clear
+        view.textContainerInset = .zero
+        view.textContainer.lineFragmentPadding = 0
+        view.isScrollEnabled = false          // let SwiftUI own the height
+        view.setContentCompressionResistancePriority(.required, for: .vertical)
+        return view
+    }
+
+    func updateUIView(_ view: UITextView, context: Context) {
+        // Guard the echo: SwiftUI re-renders after our own binding write,
+        // and reassigning text would reset the selection on every keystroke.
+        if view.text != text { view.text = text }
+        if view.font != font { view.font = font }
+    }
+
+    // iOS 16+: answer the layout proposal explicitly instead of collapsing.
+    func sizeThatFits(_ proposal: ProposedViewSize,
+                      uiView: UITextView,
+                      context: Context) -> CGSize? {
+        let width = proposal.width ?? UIView.layoutFittingCompressedSize.width
+        let size = uiView.sizeThatFits(CGSize(width: width,
+                                              height: .greatestFiniteMagnitude))
+        return CGSize(width: width, height: size.height)
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(text: $text) }
+
+    final class Coordinator: NSObject, UITextViewDelegate {
+        private let text: Binding<String>
+        init(text: Binding<String>) { self.text = text }
+
+        func textViewDidChange(_ textView: UITextView) {
+            text.wrappedValue = textView.text
+        }
+    }
+}`,
+  checking: 'The echo guard, which is the bug that makes hand-rolled representables feel broken: without the `if view.text != text` check the cursor jumps to the end on every keystroke. Also that you implement sizeThatFits rather than shrugging at a collapsed height, and that makeUIView does the allocating while updateUIView only applies state.'
+});
+
+IPREP.addChallenge({
+  id: 'ch-swiftui-layout', topic: 'swiftui-layout', domain: 'swiftui',
+  title: 'Wrapping tag layout', d: 'hard', minutes: 28,
+  prompt: 'Build a flow layout that arranges tag chips left to right and wraps to the next line when it runs out of width. Use the Layout protocol, not GeometryReader.',
+  starter: `struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+    // TODO: sizeThatFits and placeSubviews
+}`,
+  hints: [
+    'Layout has two required methods: sizeThatFits reports how much room you need, placeSubviews positions each child.',
+    'Both methods need the same line-breaking arithmetic. Compute the rows once in a helper and use it from both.',
+    'Ask each subview for its ideal size with subview.sizeThatFits(.unspecified), then walk the width accumulating rows.'
+  ],
+  solution: `struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize,
+                      subviews: Subviews,
+                      cache: inout ()) -> CGSize {
+        let maxWidth = proposal.width ?? .infinity
+        let rows = layout(subviews: subviews, maxWidth: maxWidth)
+
+        let height = rows.reduce(0) { $0 + $1.height } +
+                     spacing * CGFloat(max(0, rows.count - 1))
+        let width = rows.map(\\.width).max() ?? 0
+        return CGSize(width: proposal.width ?? width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect,
+                       proposal: ProposedViewSize,
+                       subviews: Subviews,
+                       cache: inout ()) {
+        let rows = layout(subviews: subviews, maxWidth: bounds.width)
+        var y = bounds.minY
+
+        for row in rows {
+            var x = bounds.minX
+            for item in row.items {
+                subviews[item.index].place(
+                    at: CGPoint(x: x, y: y),
+                    proposal: ProposedViewSize(item.size)
+                )
+                x += item.size.width + spacing
+            }
+            y += row.height + spacing
+        }
+    }
+
+    // MARK: - shared line breaking
+
+    private struct Item { let index: Int; let size: CGSize }
+    private struct Row {
+        var items: [Item] = []
+        var width: CGFloat = 0
+        var height: CGFloat = 0
+    }
+
+    private func layout(subviews: Subviews, maxWidth: CGFloat) -> [Row] {
+        var rows: [Row] = []
+        var current = Row()
+
+        for index in subviews.indices {
+            let size = subviews[index].sizeThatFits(.unspecified)
+            let needed = current.items.isEmpty ? size.width
+                                               : current.width + spacing + size.width
+
+            if needed > maxWidth, !current.items.isEmpty {
+                rows.append(current)
+                current = Row()
+                current.items = [Item(index: index, size: size)]
+                current.width = size.width
+                current.height = size.height
+            } else {
+                if !current.items.isEmpty { current.width += spacing }
+                current.items.append(Item(index: index, size: size))
+                current.width += size.width
+                current.height = max(current.height, size.height)
+            }
+        }
+        if !current.items.isEmpty { rows.append(current) }
+        return rows
+    }
+}
+
+// Usage:
+// FlowLayout(spacing: 8) {
+//     ForEach(tags, id: \\.self) { TagChip(text: $0) }
+// }`,
+  checking: 'That the two protocol methods agree. The classic bug is computing rows differently in sizeThatFits and placeSubviews, which reports one height and draws another, so content clips or leaves a gap. Factoring the line breaking into a shared helper is the fix and the thing to point at. Bonus if you mention the cache parameter exists to avoid recomputing this on every pass.'
+});
+
+IPREP.addChallenge({
+  id: 'ch-swiftui-perf', topic: 'swiftui-identity', domain: 'swiftui',
+  title: 'Stop the unnecessary re-renders', d: 'hard', minutes: 22,
+  prompt: 'This feed re-renders every row whenever any single post is liked, and it stutters while scrolling. Diagnose it and fix it without changing what the screen does.',
+  starter: `final class AppState: ObservableObject {
+    @Published var posts: [Post] = []
+    @Published var searchText = ""
+    @Published var isLoading = false
+    @Published var unreadCount = 0
+}
+
+struct FeedView: View {
+    @EnvironmentObject var state: AppState
+
+    var body: some View {
+        ScrollView {
+            LazyVStack {
+                ForEach(state.posts, id: \\.self) { post in
+                    AnyView(PostRow(post: post).environmentObject(state))
+                }
+            }
+        }
+    }
+}
+
+struct PostRow: View {
+    let post: Post
+    @EnvironmentObject var state: AppState
+
+    var body: some View {
+        HStack {
+            Text(post.title)
+            Spacer()
+            Text(DateFormatter().string(from: post.date))
+        }
+    }
+}`,
+  hints: [
+    'ObservableObject publishes one signal for the whole object. How many views observe this one?',
+    'id: \\.self hashes the whole post. What happens to identity when a post is liked?',
+    'Two more: AnyView erases the type SwiftUI diffs with, and something expensive is being constructed inside body.'
+  ],
+  solution: `// Five separate problems:
+//
+// 1. One fat ObservableObject. objectWillChange fires for the whole object,
+//    so changing unreadCount invalidates every row observing it.
+// 2. id: \\.self makes identity content-based, so liking a post changes its
+//    hash and the row is destroyed and rebuilt rather than updated.
+// 3. AnyView erases the static type SwiftUI uses to diff, forcing rebuilds.
+// 4. DateFormatter() is constructed inside body, once per row per render.
+//    Formatter init is genuinely expensive.
+// 5. Rows take the whole AppState when they need one post.
+
+@Observable
+@MainActor
+final class AppState {
+    var posts: [Post] = []
+    var searchText = ""
+    var isLoading = false
+    var unreadCount = 0
+}
+
+struct FeedView: View {
+    @Environment(AppState.self) private var state
+
+    var body: some View {
+        ScrollView {
+            LazyVStack {
+                // 2: stable identity from Identifiable
+                // 3: no AnyView, the concrete type stays visible
+                ForEach(state.posts) { post in
+                    PostRow(post: post)
+                }
+            }
+        }
+    }
+}
+
+struct PostRow: View {
+    let post: Post          // 5: takes only what it needs
+
+    // 4: one formatter for the whole process, not one per row per render
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        return f
+    }()
+
+    var body: some View {
+        HStack {
+            Text(post.title)
+            Spacer()
+            Text(Self.dateFormatter.string(from: post.date))
+        }
+    }
+}
+
+// With @Observable (1), SwiftUI tracks reads per property, so changing
+// unreadCount no longer invalidates rows that never read it.`,
+  checking: 'Whether you find all five and can rank them. The @Observable switch and the identity fix are the two that actually change the invalidation graph; the formatter is the one that shows up hardest in a Time Profiler trace. Saying you would confirm with Self._printChanges() and the SwiftUI Instruments template before and after is what separates a diagnosis from a guess.'
+});
+
+IPREP.addChallenge({
+  id: 'ch-swiftui-nav', topic: 'swiftui-navigation', domain: 'swiftui',
+  title: 'Type-safe router for NavigationStack', d: 'hard', minutes: 26,
+  prompt: 'Build a router for NavigationStack that supports programmatic navigation, deep links from a URL, and state restoration. Handle a route that requires the user to be signed in.',
+  starter: `enum Route: Hashable {
+    case product(id: String)
+    case order(id: String)
+    case settings
+}
+
+@Observable
+final class Router {
+    var path: [Route] = []
+    // TODO: parse a URL, push, replace, and handle auth-gated routes
+}`,
+  hints: [
+    'Parsing and navigating are separate jobs. Parse the URL into a Route first, then decide what to do with it.',
+    'A modal blocks a push. The router needs to be able to dismiss whatever is presented before navigating.',
+    'For an auth-gated route, store the pending route and replay it after sign-in rather than dropping it.'
+  ],
+  solution: `enum Route: Hashable, Codable {
+    case product(id: String)
+    case order(id: String)
+    case settings
+
+    /// Routes the user must be signed in to reach.
+    var requiresAuth: Bool {
+        switch self {
+        case .order:              return true
+        case .product, .settings: return false
+        }
+    }
+}
+
+@Observable
+@MainActor
+final class Router {
+    var path: [Route] = []
+    var presentedSheet: Route?
+    private var pendingRoute: Route?      // replayed after sign-in
+
+    private let session: Session
+
+    init(session: Session) { self.session = session }
+
+    // MARK: - navigation
+
+    func push(_ route: Route) {
+        guard authorised(route) else { return }
+        presentedSheet = nil              // a modal would block the push
+        path.append(route)
+    }
+
+    /// Deep links and cold launches rebuild the stack rather than append.
+    func replace(with routes: [Route]) {
+        guard let last = routes.last, authorised(last) else { return }
+        presentedSheet = nil
+        path = routes
+    }
+
+    func popToRoot() { path.removeAll() }
+
+    // MARK: - deep links
+
+    /// myapp://product/123  ->  .product(id: "123")
+    static func parse(_ url: URL) -> Route? {
+        guard url.scheme == "myapp" else { return nil }
+        let parts = ([url.host].compactMap { $0 }) + url.pathComponents.filter { $0 != "/" }
+
+        switch parts.first {
+        case "product" where parts.count > 1: return .product(id: parts[1])
+        case "order"   where parts.count > 1: return .order(id: parts[1])
+        case "settings":                      return .settings
+        default:                              return nil
+        }
+    }
+
+    func open(_ url: URL) {
+        guard let route = Router.parse(url) else { return }   // never crash on a bad link
+        replace(with: [route])
+    }
+
+    // MARK: - auth
+
+    private func authorised(_ route: Route) -> Bool {
+        if route.requiresAuth && !session.isSignedIn {
+            pendingRoute = route
+            presentedSheet = .settings      // or a sign-in route
+            return false
+        }
+        return true
+    }
+
+    func signedIn() {
+        guard let pending = pendingRoute else { return }
+        pendingRoute = nil
+        push(pending)
+    }
+
+    // MARK: - restoration
+
+    var restorationData: Data? { try? JSONEncoder().encode(path) }
+
+    func restore(from data: Data) {
+        path = (try? JSONDecoder().decode([Route].self, from: data)) ?? []
+    }
+}
+
+// View side:
+// NavigationStack(path: $router.path) {
+//     HomeView()
+//         .navigationDestination(for: Route.self) { route in
+//             switch route { ... }        // registered ONCE, near the root
+//         }
+// }
+// .onOpenURL { router.open($0) }`,
+  checking: 'Three things. Parsing returns an optional so a malformed link degrades instead of crashing. The pending-route replay, which almost everyone omits and which is exactly what happens when a push notification lands on a signed-out app. And registering navigationDestination once near the root, since putting it per-row is the classic silent failure.'
+});
