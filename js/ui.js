@@ -45,27 +45,110 @@
     return out;
   }
 
-  // Lightweight inline markup for answer text: **bold**, `code`, - bullets, \n
+  /* ---------- answer markup ----------
+     Deliberately small. Line-oriented so it stays predictable:
+       first line        lead sentence, the gist
+       - item            bullet
+       + item            a point in favour
+       ! item            a cost or caveat
+       | a | b |         table row (a |---| line marks the header)
+       => text           closing verdict
+     Inline: **bold** and `code`.
+  */
   function rich(s) {
     var lines = String(s).split('\n');
-    var html = '', inList = false;
-    lines.forEach(function (ln) {
-      var t = ln.trim();
-      if (t.indexOf('- ') === 0) {
-        if (!inList) { html += '<ul>'; inList = true; }
-        html += '<li>' + inline(t.slice(2)) + '</li>';
-      } else {
-        if (inList) { html += '</ul>'; inList = false; }
-        if (t) html += '<p style="margin:0 0 9px">' + inline(t) + '</p>';
+    var html = '', i = 0, first = true;
+
+    while (i < lines.length) {
+      var raw = lines[i], t = raw.trim();
+
+      if (!t) { i++; continue; }
+
+      // table
+      if (t.charAt(0) === '|') {
+        var rows = [];
+        while (i < lines.length && lines[i].trim().charAt(0) === '|') {
+          rows.push(lines[i].trim());
+          i++;
+        }
+        html += table(rows);
+        first = false;
+        continue;
       }
-    });
-    if (inList) html += '</ul>';
+
+      // lists: -, +, !
+      if (/^[-+!] /.test(t)) {
+        var marker = t.charAt(0), items = [];
+        while (i < lines.length && /^[-+!] /.test(lines[i].trim())) {
+          var lt = lines[i].trim();
+          items.push({ m: lt.charAt(0), text: lt.slice(2) });
+          i++;
+        }
+        html += list(items);
+        first = false;
+        continue;
+      }
+
+      // quote
+      if (t.indexOf('> ') === 0) {
+        var q = [];
+        while (i < lines.length && lines[i].trim().indexOf('> ') === 0) {
+          q.push(lines[i].trim().slice(2));
+          i++;
+        }
+        html += '<blockquote class="a-quote">' + inline(q.join(' ')) + '</blockquote>';
+        first = false;
+        continue;
+      }
+
+      // verdict
+      if (t.indexOf('=> ') === 0) {
+        html += '<p class="verdict">' + inline(t.slice(3)) + '</p>';
+        i++; first = false;
+        continue;
+      }
+
+      // paragraph
+      html += '<p class="' + (first ? 'lead' : '') + '">' + inline(t) + '</p>';
+      first = false;
+      i++;
+    }
     return html;
   }
+
   function inline(s) {
     return esc(s)
       .replace(/`([^`]+)`/g, '<code>$1</code>')
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  }
+
+  function list(items) {
+    var out = '<ul class="a-list">';
+    items.forEach(function (it) {
+      var cls = it.m === '+' ? 'pro' : it.m === '!' ? 'con' : 'dot';
+      out += '<li class="' + cls + '">' + inline(it.text) + '</li>';
+    });
+    return out + '</ul>';
+  }
+
+  function table(rows) {
+    var cells = rows
+      .filter(function (r) { return !/^\|[\s|:-]+\|$/.test(r); })
+      .map(function (r) {
+        return r.replace(/^\||\|$/g, '').split('|').map(function (c) { return c.trim(); });
+      });
+    if (!cells.length) return '';
+
+    var head = cells[0], body = cells.slice(1);
+    var out = '<div class="a-tablewrap"><table class="a-table"><thead><tr>';
+    head.forEach(function (h) { out += '<th>' + inline(h) + '</th>'; });
+    out += '</tr></thead><tbody>';
+    body.forEach(function (row) {
+      out += '<tr>';
+      row.forEach(function (c) { out += '<td>' + inline(c) + '</td>'; });
+      out += '</tr>';
+    });
+    return out + '</tbody></table></div>';
   }
 
   /* ---------- toasts ---------- */

@@ -78,6 +78,28 @@ Progress is written to the browser's `localStorage`, keyed to the origin. In pra
 Settings has **Download backup** and **Restore from file** for moving progress between
 devices, plus a copy/paste text version for when a file is inconvenient.
 
+## How answers are written
+
+Answers are built for **scanning**, not for reading top to bottom. Roughly nine in ten
+carry a table, a pro/con list or a verdict line, and no answer contains a paragraph longer
+than about forty words.
+
+The renderer in `js/ui.js` supports a deliberately small, line-oriented markup:
+
+```
+First line        the lead sentence, styled as the gist
+- item            a bullet
++ item            a point in favour, green
+! item            a cost or caveat, red
+| a | b |         a table row; a |---| line marks the header
+> text            a quote block
+=> text           the closing verdict
+```
+
+Inline, `**bold**` and `` `code` `` work anywhere. Comparisons get a table, trade-offs get
+paired `+` and `!` lists, and most answers close with a `=>` line carrying the single thing
+worth remembering.
+
 ## Diagrams
 
 Twenty-three cards carry a diagram under the answer, concentrated on comparisons where a
