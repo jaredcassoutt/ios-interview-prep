@@ -194,7 +194,7 @@ IPREP.addChallenge({
             self.reload()
         }
 
-        timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 30,\n                                 repeats: true) { _ in
             self.reload()
         }
 
@@ -228,7 +228,7 @@ IPREP.addChallenge({
 
         // 2. weak self is not enough: the run loop retains the timer,
         //    so it must be invalidated or it fires forever.
-        timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 30,\n                             repeats: true) { [weak self] _ in
             self?.reload()
         }
 

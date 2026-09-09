@@ -54,7 +54,7 @@ window.VIEWS = window.VIEWS || {};
     h += '<h2 class="fc-q">' + UI.line(c.q) + '</h2>';
     if (session.revealed) {
       h += '<div class="fc-rule"></div>';
-      h += '<div class="fc-a">' + answerHTML(c.a) + '</div>';
+      h += '<div class="fc-a">' + UI.answer(c.a) + '</div>';
       if (c.fig && window.FIG && FIG.has(c.fig)) h += FIG.render(c.fig);
     } else {
       h += '<p class="fc-prompt">Answer it in your head first. ' +
@@ -99,21 +99,6 @@ window.VIEWS = window.VIEWS || {};
   function grade(g, label, when) {
     return '<button class="grade g' + g + '" data-grade="' + g + '">' +
            '<b>' + label + '</b><span>' + when + '</span></button>';
-  }
-
-  // Answer markup subset: **bold**, `code`, - bullets, ``` fenced Swift.
-  function answerHTML(a) {
-    var parts = String(a).split('```');
-    var out = '';
-    for (var i = 0; i < parts.length; i++) {
-      if (i % 2 === 1) {
-        out += '<pre class="code" style="margin:14px 0">' +
-               UI.swift(parts[i].replace(/^\n/, '').replace(/\n$/, '')) + '</pre>';
-      } else {
-        out += UI.rich(parts[i]);
-      }
-    }
-    return out;
   }
 
   function reveal() { session.revealed = true; draw(); }

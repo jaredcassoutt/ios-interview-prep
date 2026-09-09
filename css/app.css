@@ -403,7 +403,7 @@ h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.03em}
 }
 pre.code{
   background:var(--sunken);border:1px solid var(--line-soft);border-radius:var(--r);
-  padding:17px 19px;overflow-x:auto;font-family:var(--mono);font-size:12.8px;line-height:1.7;margin:0;
+  padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:12px;line-height:1.65;margin:0;
 }
 .tok-key{color:#ff7eb6}.tok-type{color:#5fe3bb}.tok-str{color:#ffcf70}
 .tok-num{color:#c0a6ff}.tok-com{color:#5a5a64;font-style:italic}
@@ -720,3 +720,26 @@ pre.code{
   background:var(--raised);border-left:2px solid var(--muted);
   font-style:normal;color:#d6d6dc;line-height:1.6;font-size:13.5px;
 }
+
+/* ---------- labelled code blocks: avoid / prefer ---------- */
+.code-block{margin:14px 0}
+.code-block:first-child{margin-top:0}
+.code-head{
+  display:flex;align-items:baseline;gap:9px;
+  padding:0 0 7px 11px;position:relative;
+}
+.code-tag{
+  font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.02em;
+}
+.code-head.bad .code-tag{color:var(--bad)}
+.code-head.good .code-tag{color:var(--good)}
+.code-note{font-family:var(--prose);font-size:12.5px;color:var(--muted);line-height:1.4}
+.code-block.bad > pre.code{border-left:2px solid var(--bad)}
+.code-block.good > pre.code{border-left:2px solid var(--good)}
+.code-block.bad > pre.code,.code-block.good > pre.code{border-radius:0 var(--r) var(--r) 0}
+.code-block.bad .code-head::before,
+.code-block.good .code-head::before{
+  content:'';position:absolute;left:0;top:2px;bottom:1px;width:2px;border-radius:2px;
+}
+.code-block.bad .code-head::before{background:var(--bad);opacity:.45}
+.code-block.good .code-head::before{background:var(--good);opacity:.45}

@@ -100,6 +100,17 @@ Inline, `**bold**` and `` `code` `` work anywhere. Comparisons get a table, trad
 paired `+` and `!` lists, and most answers close with a `=>` line carrying the single thing
 worth remembering.
 
+Fenced code blocks take an optional label, so a rule can be shown rather than described:
+
+````
+```bad  a short caption saying what is wrong
+```good  and what to do instead
+```
+````
+
+40 cards carry a matched Avoid / Prefer pair, on the questions where seeing the wrong
+version is what makes the right one stick.
+
 ## Diagrams
 
 Twenty-three cards carry a diagram under the answer, concentrated on comparisons where a

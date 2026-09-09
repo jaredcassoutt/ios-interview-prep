@@ -116,6 +116,45 @@
     return html;
   }
 
+  /// Full answer renderer: fenced code blocks plus the line markup below.
+  /// A fence may be tagged: ```bad / ```good / ```swift
+  function answer(text) {
+    var parts = String(text).split('```');
+    var out = '';
+    for (var i = 0; i < parts.length; i++) {
+      out += (i % 2 === 1) ? codeBlock(parts[i]) : rich(parts[i]);
+    }
+    return out;
+  }
+
+  var CODE_LABELS = {
+    bad:  { cls: 'bad',  text: 'Avoid' },
+    good: { cls: 'good', text: 'Prefer' },
+    fix:  { cls: 'good', text: 'Fix' }
+  };
+
+  function codeBlock(raw) {
+    var body = raw.replace(/^\n/, '').replace(/\n+$/, '');
+    var kind = null, caption = '';
+
+    var m = body.match(/^(bad|good|fix|swift)(?:[ \t]+([^\n]*))?\n/);
+    if (m) {
+      body = body.slice(m[0].length);
+      caption = (m[2] || '').trim();
+      kind = CODE_LABELS[m[1]] || null;
+    }
+
+    var head = '';
+    if (kind) {
+      head = '<div class="code-head ' + kind.cls + '">' +
+             '<span class="code-tag">' + kind.text + '</span>' +
+             (caption ? '<span class="code-note">' + inline(caption) + '</span>' : '') +
+             '</div>';
+    }
+    return '<div class="code-block' + (kind ? ' ' + kind.cls : '') + '">' + head +
+           '<pre class="code">' + swift(body) + '</pre></div>';
+  }
+
   function inline(s) {
     return esc(s)
       .replace(/`([^`]+)`/g, '<code>$1</code>')
@@ -248,7 +287,7 @@
   }
 
   window.UI = {
-    esc: esc, swift: swift, rich: rich, line: inline, toast: toast, confetti: confetti,
+    esc: esc, swift: swift, rich: rich, line: inline, answer: answer, toast: toast, confetti: confetti,
     modal: modal, closeModal: closeModal, ring: ring, fmtTime: fmtTime, relDays: relDays
   };
 })();
