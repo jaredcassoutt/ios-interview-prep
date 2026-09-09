@@ -23,6 +23,7 @@ Two options:
 | Coding challenges | 30, with hints, reference solutions, and interviewer notes |
 | Mock interview prompts | 21, with self-scoring rubrics and follow-ups |
 | Badges | 41 |
+| Diagrams | 23, inline SVG |
 
 The UI half of the syllabus is split deliberately: 8 SwiftUI topics against 7 UIKit ones,
 so SwiftUI is 53% of the UI content. UIKit stays because view controller lifecycle, the
@@ -76,6 +77,25 @@ Progress is written to the browser's `localStorage`, keyed to the origin. In pra
 
 Settings has **Download backup** and **Restore from file** for moving progress between
 devices, plus a copy/paste text version for when a file is inconvenient.
+
+## Diagrams
+
+Twenty-three cards carry a diagram under the answer, concentrated on comparisons where a
+picture does the work a paragraph struggles with: frame against bounds, serial against
+concurrent queues, compositional against flow layout, `List` against `LazyVStack`,
+`@Observable` against `ObservableObject`, cursor against offset pagination.
+
+They are **inline SVG drawn by JavaScript**, not image files. That means:
+
+- No binary assets, so the repository stays text. The whole system is about 30 KB of source.
+- Every colour comes from the same CSS custom properties as the rest of the interface, so
+  a diagram can never drift from the palette.
+- Motion is CSS keyframes. Each figure is legible with animation switched off, and
+  `prefers-reduced-motion` holds the resting state rather than flickering.
+
+`js/figures.js` and `js/figures2.js` define them. `js/figure-map.js` attaches each one to a
+card by matching question text, so the content files stay free of presentation concerns and
+the whole mapping is readable in one place. It warns in the console if a mapping goes stale.
 
 ## Design
 

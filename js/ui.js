@@ -84,11 +84,14 @@
   }
 
   /* ---------- confetti ---------- */
-  var cv = document.getElementById('confetti'), ctx = cv.getContext('2d'), parts = [], raf = null;
-  function fit() { cv.width = innerWidth; cv.height = innerHeight; }
+  var cv = document.getElementById('confetti');
+  var ctx = cv ? cv.getContext('2d') : null;
+  var parts = [], raf = null;
+  function fit() { if (cv) { cv.width = innerWidth; cv.height = innerHeight; } }
   fit(); addEventListener('resize', fit);
 
   function confetti(n, colors) {
+    if (!ctx) return;                 // no canvas on this page, nothing to draw
     colors = colors || ['#6d8cff', '#2ed3a3', '#ffc233', '#ff7ac2', '#ff5c47', '#a97bff', '#29c7e8'];
     for (var i = 0; i < (n || 90); i++) {
       parts.push({

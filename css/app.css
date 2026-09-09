@@ -543,3 +543,121 @@ pre.code{
   padding:1px 4px;border-radius:4px;color:#b6c8ff;
 }
 .tname code{font-family:var(--mono);font-size:.88em;color:#b6c8ff}
+
+/* ============================================================
+   Figures — inline SVG diagrams inside card answers.
+   All colour comes from the palette, so they theme automatically.
+   ============================================================ */
+
+.fig{
+  margin:20px 0;padding:16px 16px 13px;
+  background:var(--sunken);border:1px solid var(--line-soft);
+  border-radius:var(--r);box-shadow:var(--lift);
+}
+.fig-body{overflow-x:auto}
+.f-svg{display:block;width:100%;height:auto;max-width:560px;margin:0 auto}
+.fig figcaption{
+  margin-top:13px;padding-top:12px;border-top:1px solid var(--line-soft);
+  font-family:var(--prose);font-size:12.5px;line-height:1.55;color:var(--muted);
+}
+.fig figcaption b{color:var(--text);font-weight:600}
+.fig figcaption code{
+  font-family:var(--mono);font-size:11.5px;background:var(--raised);
+  padding:1px 5px;border-radius:4px;color:#b6c8ff;
+}
+
+/* --- type inside figures --- */
+.f-lbl{font-family:var(--display);font-size:10px;font-weight:600;fill:var(--muted)}
+.f-mono{font-family:var(--mono);font-size:9.5px;fill:var(--muted)}
+.f-tiny{font-size:8.5px}
+.f-center{text-anchor:middle}
+.f-end{text-anchor:end}
+.f-on-fill{fill:var(--ink);font-weight:600}
+.f-good{fill:var(--good)}
+.f-warn{fill:var(--bad)}
+
+/* --- shapes --- */
+.f-surface{fill:var(--surface);stroke:var(--line);stroke-width:1}
+.f-outline{fill:none;stroke:var(--line);stroke-width:1}
+.f-dashed{stroke-dasharray:3 3}
+.f-lane{fill:var(--surface);stroke:none}
+.f-rule{stroke:var(--line-soft);stroke-width:1}
+.f-dim{stroke:var(--muted);stroke-width:1;stroke-dasharray:2 2}
+.f-frame{fill:none;stroke:var(--bad);stroke-width:1.5;stroke-dasharray:4 3}
+.f-cursor{stroke:var(--good);stroke-width:1.5;stroke-dasharray:4 3}
+.f-touch{fill:var(--text)}
+.f-hatched{opacity:.45}
+
+.f-fill-dim{fill:var(--raised)}
+.f-fill-good{fill:var(--good)}
+.f-fill-lang{fill:var(--language)}
+.f-fill-lang-soft{fill:color-mix(in srgb,var(--language) 45%,var(--raised))}
+.f-fill-found{fill:var(--foundation)}
+.f-fill-uikit{fill:var(--uikit)}
+.f-fill-uikit-soft{fill:color-mix(in srgb,var(--uikit) 40%,var(--raised))}
+.f-fill-swiftui{fill:var(--swiftui)}
+.f-fill-conc{fill:var(--concurrency)}
+.f-fill-arch{fill:var(--architecture)}
+.f-fill-perf{fill:var(--performance)}
+
+.f-arrow{stroke:var(--muted);stroke-width:1.2;fill:none}
+.f-arrowhead{fill:var(--muted)}
+.f-dashed-arrow{stroke-dasharray:3 2}
+.f-down,.f-up{stroke:var(--dim)}
+.f-stage{stroke:none}
+
+/* --- animation ---
+   Every figure is legible with animation switched off: these move an
+   element away from and back to its resting state, never into it. */
+
+.anim-spin{transform-box:view-box;transform-origin:89px 85px;animation:f-spin 5s ease-in-out infinite}
+@keyframes f-spin{0%,100%{transform:rotate(0deg)}50%{transform:rotate(20deg)}}
+
+.anim-frame{transform-box:view-box;transform-origin:89px 85px;animation:f-framebox 5s ease-in-out infinite}
+@keyframes f-framebox{0%,100%{transform:scale(1,1)}50%{transform:scale(1.17,1.45)}}
+
+.anim-stage{animation:f-stage 3s ease-in-out infinite}
+@keyframes f-stage{0%,70%,100%{opacity:.45}12%,32%{opacity:1}}
+
+.anim-scroll{transform-box:view-box;animation:f-scroll 4s linear infinite}
+@keyframes f-scroll{0%{transform:translateY(0);opacity:1}
+  85%{transform:translateY(-110px);opacity:1}
+  86%{opacity:0}100%{transform:translateY(-110px);opacity:0}}
+
+.anim-serial{transform-box:view-box;animation:f-serial 4.4s linear infinite}
+@keyframes f-serial{0%{transform:translateX(0);opacity:0}
+  4%{opacity:1}22%{transform:translateX(246px);opacity:1}
+  24%{transform:translateX(246px);opacity:0}100%{opacity:0}}
+
+.anim-conc{transform-box:view-box;animation:f-conc 2.6s linear infinite}
+@keyframes f-conc{0%{transform:translateX(0);opacity:0}
+  8%{opacity:1}85%{transform:translateX(246px);opacity:1}
+  90%{opacity:0}100%{opacity:0}}
+
+.anim-pulse{animation:f-pulse 1.8s ease-in-out infinite}
+@keyframes f-pulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+.anim-fork{transform-box:view-box;transform-origin:289px 65px;animation:f-fork 3.4s ease-in-out infinite}
+@keyframes f-fork{0%,30%{transform:translateY(-22px) scale(.9);opacity:0}
+  48%,100%{transform:none;opacity:1}}
+
+.anim-cycle{stroke:var(--bad);animation:f-cycle 2.4s ease-in-out infinite}
+@keyframes f-cycle{0%,100%{opacity:.35}50%{opacity:1}}
+
+.anim-scan{transform-box:view-box;animation:f-scan 2.6s linear infinite}
+@keyframes f-scan{0%,100%{opacity:0}6%,12%{opacity:1}}
+
+.anim-flash{animation:f-flash 2.4s ease-in-out infinite}
+@keyframes f-flash{0%,100%{opacity:.4}40%,60%{opacity:1}}
+
+.anim-insert{transform-box:view-box;animation:f-insert 4s ease-in-out infinite}
+@keyframes f-insert{0%,20%{opacity:0;transform:translateY(-14px)}
+  35%,100%{opacity:1;transform:none}}
+
+/* Reduced motion: hold the resting state rather than flickering.
+   The global reduce rule would otherwise collapse infinite animations
+   to a 0.01ms loop, which is worse than no animation at all. */
+@media(prefers-reduced-motion:reduce){
+  .fig *{animation:none!important}
+  .anim-scan,.anim-serial,.anim-conc,.anim-insert,.anim-fork{opacity:1!important;transform:none!important}
+}

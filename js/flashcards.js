@@ -55,6 +55,7 @@ window.VIEWS = window.VIEWS || {};
     if (session.revealed) {
       h += '<div class="fc-rule"></div>';
       h += '<div class="fc-a">' + answerHTML(c.a) + '</div>';
+      if (c.fig && window.FIG && FIG.has(c.fig)) h += FIG.render(c.fig);
     } else {
       h += '<p class="fc-prompt">Answer it in your head first. ' +
            '<span class="kbd">Space</span> reveals.</p>';
