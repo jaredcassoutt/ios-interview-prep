@@ -17,7 +17,7 @@ IPREP.addTopic({
     { d: 'medium', q: 'How does a zeroing weak reference actually work under the hood?',
       a: "Every object ever weakly referenced gets an entry in a global **side table**, holding the strong count, the weak count, and the list of weak slots.\n\n- When the strong count hits zero, the runtime walks that entry and nils every registered slot before deallocating\n\n! That extra indirection and locking is why `weak` reads are measurably more expensive than strong or `unowned` reads.\n\n=> Do not put a `weak` read in a tight loop." },
 
-    { d: 'medium', q: 'Name the three classic retain cycle shapes in iOS code.',
+    { d: 'medium', alias: 'Name the three classic retain cycle shapes in iOS code.', q: 'Where do retain cycles usually come from in an iOS app?',
       a: "1. **Closure captures self**, and self holds the closure. A stored completion handler, a Combine sink, a `Timer` block\n2. **Parent and child both strong.** A controller holds a view model that holds a strong back reference\n3. **Delegate declared strong.** Delegates should almost always be `weak var delegate: FooDelegate?`\n\n=> A fourth, sneakier one: `NotificationCenter` block observers, which retain the block until you remove the token.\n\n```bad  three separate leaks\nfinal class FeedViewController: UIViewController {\n    var onRefresh: (() -> Void)?\n    private var timer: Timer?\n\n    override func viewDidLoad() {\n        super.viewDidLoad()\n        onRefresh = { self.reload() }             // 1: self holds it\n        timer = Timer.scheduledTimer(withTimeInterval: 30,\n                                 repeats: true) { _ in\n            self.reload()                       // 2: run loop holds it\n        }\n        NotificationCenter.default.addObserver(\n            forName: .didLogin, object: nil, queue: .main\n        ) { _ in self.reload() }                  // 3: centre holds it\n    }\n}\n```\n\n```good\nprivate var observer: NSObjectProtocol?\n\nonRefresh = { [weak self] in self?.reload() }\ntimer = Timer.scheduledTimer(withTimeInterval: 30,\n                             repeats: true) { [weak self] _ in\n    self?.reload()\n}\nobserver = NotificationCenter.default.addObserver(\n    forName: .didLogin, object: nil, queue: .main\n) { [weak self] _ in self?.reload() }\n\ndeinit {\n    timer?.invalidate()            // weak self alone does NOT stop it\n    if let observer { NotificationCenter.default.removeObserver(observer) }\n}\n```" },
 
     { d: 'medium', q: 'Why must a `weak` delegate property be declared on a class-bound protocol?',
@@ -35,7 +35,7 @@ IPREP.addTopic({
     { d: 'hard', q: 'Object is deallocated but you still see the memory held. What are you looking for?',
       a: "Distinguish the two failure modes first.\n\n| | Leak | Abandoned |\n|---|---|---|\n| References remain | No | **Yes** |\n| Cause | A cycle | Growing cache, unpopped controllers, unremoved observers |\n| Tool | Leaks, Memory Graph | Allocations with generation marks |\n\n=> Memory Graph Debugger plus `malloc` stack logging tells you exactly who holds the reference." },
 
-    { d: 'medium', q: 'What is the ownership rule for `deinit`?',
+    { d: 'medium', alias: 'What is the ownership rule for `deinit`?', q: 'When does `deinit` run, and on which thread?',
       a: "`deinit` runs when the strong count reaches zero, before memory is freed, **on whatever thread released the last reference**.\n\n! An object released on a background queue runs its `deinit` there, so any UIKit teardown inside is a threading bug\n! It cannot be called directly\n! It cannot be `async`\n\n- The superclass `deinit` runs automatically after the subclass one" }
   ],
   quiz: [
@@ -62,7 +62,7 @@ IPREP.addTopic({
     { d: 'easy', q: 'What is the core semantic difference between a struct and a class?',
       a: "| | Struct | Class |\n|---|---|---|\n| Assignment gives you | An independent copy | The same instance |\n| Identity (`===`) | None | Yes |\n| Inheritance | No | Yes |\n| `deinit` | No | Yes |\n| Reference counting | No | Yes |\n| Memberwise init | Free | No |\n\n=> Everything else follows from the first row. A struct means nobody else can observe your mutations." },
 
-    { d: 'medium', q: 'Where do struct and class instances actually live?',
+    { d: 'medium', alias: 'Where do struct and class instances actually live?', q: 'What is the difference between the stack and the heap, and where do structs and classes live?',
       a: "'Stack vs heap' is an oversimplification. **A struct is stored inline in whatever contains it.**\n\n| Struct location | Lives |\n|---|---|\n| Local variable | Stack |\n| Property of a class | Inside that class instance, on the heap |\n| Element of an array | In the array's heap buffer |\n\nA class instance is always a heap allocation with a header holding type and counts.\n\n=> The consequence that matters: struct storage costs **no separate allocation and no retain/release traffic**." },
 
     { d: 'medium', q: 'Explain copy-on-write and why Swift collections need it.',
@@ -116,7 +116,7 @@ IPREP.addTopic({
     { d: 'easy', q: 'What problem does protocol-oriented programming solve that class inheritance does not?',
       a: "| | Inheritance | Protocols |\n|---|---|---|\n| How many | One superclass | Many, composable |\n| Works on | Classes only | Structs and enums too |\n| Storage | Inherited whether you want it or not | None imposed |\n| Substitution in tests | Hard | Easy |\n\n=> The practical win is testability: you can substitute a fake conformance where you could never substitute a superclass." },
 
-    { d: 'medium', q: 'Difference between a protocol requirement and a protocol extension method?',
+    { d: 'medium', alias: 'Difference between a protocol requirement and a protocol extension method?', q: 'What is the difference between declaring a method in a protocol and only in its extension?',
       a: "**This is the single most-asked POP gotcha.**\n\n| Declared in | Dispatch | Concrete type's version wins? |\n|---|---|---|\n| Protocol **body** (a requirement) | Witness table, dynamic | **Yes** |\n| Extension **only** | Static, on the compile-time type | **No** |\n\n=> Calling an extension-only method through `any P` runs the extension version even if the concrete type shadows it. If you want polymorphism, the method must be a declared requirement.\n\n```bad  greet() is extension-only, so the concrete override is ignored\nprotocol Greeter { }\nextension Greeter { func greet() -> String { \"hello\" } }\n\nstruct Loud: Greeter { func greet() -> String { \"HELLO\" } }\n\nlet g: any Greeter = Loud()\ng.greet()        // \"hello\"  <- static dispatch on the protocol\n```\n\n```good  declare it as a requirement to get dynamic dispatch\nprotocol Greeter { func greet() -> String }\nextension Greeter { func greet() -> String { \"hello\" } }  // default\n\nlet g: any Greeter = Loud()\ng.greet()        // \"HELLO\"\n```" },
 
     { d: 'medium', q: 'What is a witness table?',
@@ -125,7 +125,7 @@ IPREP.addTopic({
     { d: 'hard', q: 'What is an existential container and why does `any P` cost something?',
       a: "`any P` is boxed: **three words of inline buffer**, plus type metadata, plus witness table pointers.\n\n! If the value fits in three words it is stored inline\n! Otherwise it is **heap-boxed** and the container holds a pointer\n\nCosts:\n! A possible allocation\n! Loss of static type information, so calls go through the witness table\n! No specialisation, no inlining\n\n=> `some P` has none of these, because the concrete type is known at compile time." },
 
-    { d: 'medium', q: '`some P` versus `any P` in one sentence each.',
+    { d: 'medium', alias: '`some P` versus `any P` in one sentence each.', q: 'What is the difference between `some` and `any`?',
       a: "| | `some P` | `any P` |\n|---|---|---|\n| Is | One specific concrete type, hidden from the caller | Any conforming type, possibly different per value |\n| Resolved | Compile time | Runtime |\n| Boxing | None | Yes |\n| Heterogeneous collection | Impossible | **This is its purpose** |\n\n=> Rule of thumb: reach for `some` by default, use `any` only when you genuinely need heterogeneity, such as `[any Drawable]`." },
 
     { d: 'hard', q: 'Why could you not put a protocol with an associated type in an array before Swift 5.7?',
@@ -143,7 +143,7 @@ IPREP.addTopic({
     { d: 'medium', q: 'What does `@objc` on a protocol change?',
       a: "It makes the protocol visible to the Objective-C runtime.\n\n+ `optional` requirements\n+ Runtime checks with `respondsToSelector:`\n+ Usable as a delegate for UIKit classes that call it dynamically\n! Class-only conformance\n! Only Objective-C-representable types\n! Dispatch through `objc_msgSend` instead of a witness table" },
 
-    { d: 'hard', q: 'Design question: when is POP the wrong tool?',
+    { d: 'hard', alias: 'Design question: when is POP the wrong tool?', q: 'When is protocol-oriented programming the wrong choice?',
       a: "! A protocol with **one conformer**\n! A protocol whose only purpose is mocking a type you own\n! A hierarchy of protocols with default implementations calling each other\n! `any P` in a hot path where boxing shows in a profile\n\n=> That third one reproduces the fragile base class problem with worse tooling, because you cannot see the override chain. Concrete types and plain functions are still the default." }
   ],
   quiz: [
@@ -174,7 +174,7 @@ IPREP.addTopic({
     { d: 'medium', q: 'What is an `associatedtype` and why does it exist?',
       a: "A placeholder for a type the **conforming type** chooses, letting a protocol describe a family rather than one shape.\n\n```\nprotocol Container {\n    associatedtype Item\n    mutating func append(_ x: Item)\n}\n```\n\n=> Generics parameterise a function or type. Associated types parameterise a **protocol**." },
 
-    { d: 'hard', q: 'Explain `where` clauses on a generic and on an extension.',
+    { d: 'hard', alias: 'Explain `where` clauses on a generic and on an extension.', q: 'What does a `where` clause do on a generic function, and on an extension?',
       a: "On a function, it restricts callers:\n```\nfunc sum<C: Collection>(_ c: C) -> Int where C.Element == Int\n```\n\nOn an extension, it adds members that exist only for some instantiations:\n```\nextension Array where Element: Comparable { func sorted() }\n```\n\n=> That second form is a **conditional extension**, and it is the idiomatic way to layer capability without polluting the base type." },
 
     { d: 'medium', q: 'What is conditional conformance?',
@@ -214,13 +214,13 @@ IPREP.addTopic({
   title: 'Closures, Blocks & Capture Semantics',
   summary: 'Escaping vs non-escaping, capture lists, block storage in Objective-C, and the bugs each causes.',
   cards: [
-    { d: 'easy', q: 'What is a closure, precisely?',
+    { d: 'easy', alias: 'What is a closure, precisely?', q: 'What is a closure, and what does it capture?',
       a: "**A function plus the environment it captured.** The captured variables live in a heap-allocated context the closure keeps alive.\n\n=> That is why closures can create retain cycles.\n\n| | Swift closure | Objective-C block |\n|---|---|---|\n| Default capture | **By reference** | **By value** |\n| Opt out with | A capture list | `__block` |" },
 
     { d: 'medium', q: 'Swift closures capture by reference. What does that actually mean?',
       a: "Capturing a `var` captures the **variable**, not its value at capture time.\n\n```\nvar n = 0\nlet f = { n += 1 }\nf(); f()\nprint(n)   // 2\n```\n\n- Later mutations outside are visible inside\n- Mutations inside are visible outside\n\n=> To snapshot the value instead, put it in the capture list: `{ [n] in print(n) }` captures a constant copy." },
 
-    { d: 'medium', q: '`@escaping` versus non-escaping, and why the default matters.',
+    { d: 'medium', alias: '`@escaping` versus non-escaping, and why the default matters.', q: 'What is the difference between an escaping and a non-escaping closure?',
       a: "| | Non-escaping (default) | `@escaping` |\n|---|---|---|\n| Guarantee | Finishes before the function returns | May be stored and called later |\n| Storage | Can live on the stack | Heap-allocated |\n| Capturing self | No cycle risk, no `self.` needed | Becomes ownership |\n\n=> Non-escaping has been the default since Swift 3 precisely because it is cheaper and safer, and it forces you to write `self.` exactly where a cycle is possible." },
 
     { d: 'hard', q: 'Why can a mutating struct method not capture self in an escaping closure?',
@@ -265,6 +265,10 @@ IPREP.addTopic({
   title: 'Objective-C Runtime, Categories & Delegates',
   summary: 'Message dispatch, categories vs extensions, the delegate pattern, and Swift/ObjC interop.',
   cards: [
+
+    { d: 'medium', q: 'What is the difference between `copy` and `retain` (or `strong`) for a property?',
+      a: "`retain`/`strong` keeps **their** object. `copy` stores **your own** snapshot.\n\n| | strong | copy |\n|---|---|---|\n| Stores | The same instance | A copy |\n| Caller can mutate it later | **Yes** | No |\n| Cost | A retain | An allocation |\n\n```bad  the caller still owns the object you are holding\n@property (nonatomic, strong) NSString *name;\n\nNSMutableString *n = [NSMutableString stringWithString:@\"Jo\"];\nobj.name = n;\n[n appendString:@\"ker\"];      // obj.name silently changed too\n```\n\n```good\n@property (nonatomic, copy) NSString *name;\n```\n\n=> Use `copy` for any property whose type has a mutable subclass: `NSString`, `NSArray`, `NSDictionary`, `NSSet`, and blocks. In Swift, value types make this unnecessary." },
+
     { d: 'easy', q: 'What happens when you send a message in Objective-C?',
       a: "`[obj doThing]` compiles to `objc_msgSend(obj, @selector(doThing))`.\n\n1. Look up the selector in the class's **method cache**\n2. Then the method list\n3. Then walk the superclass chain\n4. If nothing is found, enter **message forwarding**\n\n=> Because lookup is by selector at runtime, Objective-C can do things Swift cannot: swizzling, `respondsToSelector:`, and adding methods at runtime." },
 
@@ -277,7 +281,7 @@ IPREP.addTopic({
     { d: 'hard', q: 'How do you fake a stored property on a category?',
       a: "**Associated objects.**\n\n```\nobjc_setAssociatedObject(self, &key, value, OBJC_ASSOCIATION_RETAIN_NONATOMIC);\nobjc_getAssociatedObject(self, &key);\n```\n\n+ The runtime tears them down automatically when the object deallocates\n! Slower than a real ivar\n! Invisible to memory graph tooling\n! Easy to create a cycle with `RETAIN` on something pointing back" },
 
-    { d: 'medium', q: 'Describe the delegate pattern and its trade-offs versus closures and notifications.',
+    { d: 'medium', alias: 'Describe the delegate pattern and its trade-offs versus closures and notifications.', q: 'When would you use a delegate instead of a closure or a notification?',
       a: "| | Delegate | Closure | Notification |\n|---|---|---|---|\n| Cardinality | One to one | One to one | One to many |\n| Best for | Many related callbacks | A single result | Full decoupling |\n| Traceable | Yes | Yes | **No** |\n| Typed | Yes | Yes | No |\n| Main risk | Must be `weak` | Retain cycles | Leaked observers |\n\n=> UIKit uses delegates for `UITableViewDelegate` precisely because there are dozens of related callbacks with a defined lifecycle." },
 
     { d: 'hard', q: 'What is method swizzling, and what breaks when you do it?',

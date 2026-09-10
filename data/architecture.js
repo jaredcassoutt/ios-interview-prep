@@ -14,7 +14,7 @@ IPREP.addTopic({
     { d: 'medium', q: 'MVVM: what changes relative to MVP?',
       a: "The view model has **no reference to the view**. The direction of knowledge reverses.\n\n| | MVP | MVVM |\n|---|---|---|\n| Knows about the view | Yes, via protocol | No |\n| Communication | Imperative calls | View observes state |\n| Testing | Needs a mock view | Plain object, no mock |\n\n- The view model exposes observable state; the view binds to it\n- Binding comes from Combine, `@Published`, `@Observable`, or a hand-rolled observer\n\n=> The risk is the view model absorbing everything and becoming a Massive View Model instead." },
 
-    { d: 'hard', q: 'VIPER: name the five parts and say honestly when it is worth it.',
+    { d: 'hard', alias: 'VIPER: name the five parts and say honestly when it is worth it.', q: 'What are the parts of VIPER, and when is it worth the overhead?',
       a: "**V**iew, **I**nteractor (business logic), **P**resenter (view state), **E**ntity (models), **R**outer (navigation).\n\n+ Large app, many teams: strict boundaries make ownership obvious\n+ Genuinely complex business rules get their own testable layer\n! Enormous boilerplate\n! Five files and three protocols to render a list\n\n=> Worth it at team scale and rule complexity. Not worth it for a screen showing a table. The honest interview answer names the cost, not just the structure." },
 
     { d: 'medium', q: 'What does the Coordinator add to any of these?',
@@ -80,7 +80,7 @@ IPREP.addTopic({
     { d: 'hard', q: 'What are the arguments against a DI container framework on iOS?',
       a: "Most containers resolve by type at **runtime**, which throws away Swift's main advantage.\n\n! A missing registration is a crash, not a compile error\n! The graph becomes invisible; you cannot read a file and see what depends on what\n! An extra dependency and a learning curve\n\n+ Manual initialiser injection gives compile-time safety and a readable graph\n\n=> Containers earn their place in very large multi-module apps where manual wiring becomes genuinely unwieldy. Below that, they cost more than they give." },
 
-    { d: 'medium', q: 'What makes code hard to test, in a checklist?',
+    { d: 'medium', alias: 'What makes code hard to test, in a checklist?', q: 'What makes a class hard to unit test?',
       a: "Every item below is a **missing injection point**.\n\n! Constructs its own dependencies internally\n! Reaches for singletons or other global state\n! Does work in `init`\n! Calls `Date()`, `UUID()`, `Bundle.main` or the file system directly\n! Requires a view lifecycle to exercise logic\n! Mixes async and sync with no injection point\n! Keeps the interesting logic in private methods with no public seam\n\n=> Testability is not a separate property you add. It is a consequence of making dependencies explicit." },
 
     { d: 'hard', q: 'How do you inject dependencies into a storyboard-instantiated view controller?',
@@ -107,7 +107,7 @@ IPREP.addTopic({
   title: 'Persistence & Storage Mechanisms',
   summary: 'UserDefaults, Keychain, files, Core Data, SwiftData and SQLite: choosing and using each.',
   cards: [
-    { d: 'easy', q: 'Name the storage options and what each is actually for.',
+    { d: 'easy', alias: 'Name the storage options and what each is actually for.', q: 'What are the options for storing data on iOS, and how do you choose between them?',
       a: "Pick by **what the data is**, not by what is convenient.\n\n| Option | For | Size |\n|---|---|---|\n| `UserDefaults` | Small preferences | Kilobytes |\n| Keychain | Credentials and secrets | Tiny, encrypted |\n| Files | Blobs, images, downloads, exports | Any |\n| Core Data / SwiftData | Object graph, relationships, querying, migration | Large |\n| SQLite or GRDB | When you want SQL and deterministic performance | Large |\n| CloudKit | Sync across a user's devices | Any |\n\n=> The interview trap is putting big or sensitive data in `UserDefaults`." },
 
     { d: 'medium', q: 'Why should you not store large data or secrets in UserDefaults?',
@@ -158,13 +158,13 @@ IPREP.addTopic({
   title: 'Network Layer & Mobile API Design',
   summary: 'Building a URLSession layer, and designing the API a mobile client actually wants.',
   cards: [
-    { d: 'easy', q: 'What are the layers of a well-factored network stack?',
+    { d: 'easy', alias: 'What are the layers of a well-factored network stack?', q: 'How would you structure a networking layer?',
       a: "Four layers, each testable without a network.\n\n| Layer | Job | Knows about |\n|---|---|---|\n| **Endpoint** | Typed path, method, headers, body | Nothing |\n| **Client** | Builds the request, executes, returns `Data` | Auth, retries, logging |\n| **Decoder** | `Data` to domain models and domain errors | Models |\n| **Repository** | Composes the above into operations | Caching |\n\n=> The test of the design is whether you can unit test each layer in isolation." },
 
     { d: 'medium', q: 'What does URLSession give you for free that people reimplement badly?',
       a: "+ Connection pooling and HTTP/2 multiplexing\n+ A shared `URLCache` honouring `Cache-Control` and `ETag`\n+ Background transfers that survive suspension or termination\n+ Cellular policies: `allowsExpensiveNetworkAccess`, `waitsForConnectivity`\n+ Automatic retry of idempotent requests on connection reuse failure\n+ System proxy, TLS and certificate handling\n\n=> Hand-rolled clients usually lose the cache and background support. That is why the answer to 'would you use Alamofire?' is normally 'not for the transport'." },
 
-    { d: 'medium', q: 'How do you design the error type for a network layer?',
+    { d: 'medium', alias: 'How do you design the error type for a network layer?', q: 'How would you model errors in a networking layer?',
       a: "A **domain enum** that hides transport detail but keeps enough to act on.\n\n```\nenum APIError: Error {\n    case offline\n    case timeout\n    case unauthorized\n    case server(status: Int, message: String?)\n    case decoding(DecodingError)\n    case cancelled\n}\n```\n\n=> A view model should decide 'show retry' vs 'send to login' vs 'log and show generic' **without inspecting `URLError` codes**. Leaking `URLError` and `DecodingError` to the UI layer is a design smell.\n\n```bad  transport detail leaks all the way to the view\ncatch let error as URLError where error.code == .userAuthenticationRequired {\n    showLogin()\n} catch let error as DecodingError {\n    showGenericError()\n}\n```\n\n```good  the view model decides on a domain error\nenum APIError: Error {\n    case offline, timeout, unauthorized, cancelled\n    case server(status: Int, message: String?)\n    case decoding(DecodingError)\n}\n\nswitch error {\ncase .unauthorized:      showLogin()\ncase .offline, .timeout: showRetry()\ndefault:                 showGenericError()\n}\n```" },
 
     { d: 'hard', q: 'How do you implement token refresh without a thundering herd?',
@@ -176,7 +176,7 @@ IPREP.addTopic({
     { d: 'medium', q: 'What are the mobile-specific concerns when designing an API?',
       a: "Design for **high latency and intermittent connectivity**, not for bandwidth.\n\n- **Round trips are expensive.** A cold cellular request costs hundreds of milliseconds before a byte moves, so prefer one composite response over five chatty calls\n- **Payload size costs battery**, because the radio stays powered after each transfer\n- **Clients cannot be force-updated**, so the API must stay backward compatible for years\n- **Offline is normal**, not exceptional\n- **Push carries a hint, not a payload**, since delivery is best-effort" },
 
-    { d: 'hard', q: 'Compare pagination strategies for a mobile feed.',
+    { d: 'hard', alias: 'Compare pagination strategies for a mobile feed.', q: 'How would you paginate a feed, and which approach would you pick?',
       a: "| Strategy | Stable under insertion | Deep pages | Verdict |\n|---|---|---|---|\n| **Offset / limit** | No, items shift | Slows down | Simple but wrong for feeds |\n| **Cursor / keyset** | Yes | Fast at any depth | **The right default** |\n| **Time-based** | Mostly | Fast | Breaks on ties and clock skew |\n\n! Offset paging shows duplicates or skips items whenever new content is inserted above.\n\n=> Also specify what happens when a client returns after days offline with a stale cursor, and give it a way to refresh from the top without re-paging everything." },
 
     { d: 'hard', q: 'How do you version a mobile API, and what does backward compatibility require?',

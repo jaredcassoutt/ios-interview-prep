@@ -11,7 +11,7 @@ IPREP.addTopic({
     { d: 'easy', q: 'Why must UI work happen on the main queue?',
       a: "**UIKit is not thread-safe.** Its internal state, the layout pass, the responder chain and the layer tree all assume single-threaded access.\n\n! Touching them from a background thread gives corruption, undefined layout, and crashes that reproduce one time in fifty\n\n- The main queue is a serial queue bound to the main thread\n- That thread also runs the run loop driving event delivery and the commit to the render server\n\n=> `DispatchQueue.main.async` hops back. The Main Thread Checker flags violations at runtime." },
 
-    { d: 'medium', q: 'List the QoS classes and what each is for.',
+    { d: 'medium', alias: 'List the QoS classes and what each is for.', q: 'What are the QoS classes, and when would you use each one?',
       a: "| Class | For | Latency |\n|---|---|---|\n| `.userInteractive` | Must finish this frame. Animation, event handling | Do almost nothing here |\n| `.userInitiated` | User is watching a spinner | Seconds |\n| `.default` | Unspecified. Avoid stating it | |\n| `.utility` | Progress-bar work, downloads, imports | Energy-efficient |\n| `.background` | Invisible maintenance, prefetch, sync | May be deferred substantially |\n\n=> QoS drives CPU priority, I/O priority **and timer coalescing**, so it is a battery decision as much as a speed one." },
 
     { d: 'medium', q: 'What is priority inversion and how does GCD handle it?',
@@ -61,16 +61,16 @@ IPREP.addTopic({
   title: 'Thread Safety, Races & Deadlocks',
   summary: 'What a data race is, the tools to prevent one, and how to find them.',
   cards: [
-    { d: 'easy', q: 'Define a data race precisely.',
+    { d: 'easy', alias: 'Define a data race precisely.', q: 'What exactly is a data race?',
       a: "Two or more threads access the same memory location concurrently, **at least one access is a write**, and there is no synchronisation ordering them.\n\n! The result is **undefined behaviour**, not merely an unexpected value. The compiler and CPU may reorder, cache or tear the access.\n\n=> Distinct from a **race condition**, which is a logic bug about ordering, such as a check-then-act another thread invalidates. You can have a race condition with no data race." },
 
-    { d: 'medium', q: 'Compare the common synchronisation primitives on iOS.',
+    { d: 'medium', alias: 'Compare the common synchronisation primitives on iOS.', q: 'What are your options for making a class thread-safe on iOS?',
       a: "| Primitive | Best for | Watch out |\n|---|---|---|\n| Serial `DispatchQueue` | **The idiomatic default** | Supports async, easy to reason about |\n| `os_unfair_lock` | Very short critical sections | Not recursive, must not be copied |\n| `NSLock` | Short critical sections | Slower than unfair lock |\n| `NSRecursiveLock` | Same thread re-acquires | Usually a design smell |\n| `DispatchSemaphore` | Counting, so also a limiter | Easy to misuse as a mutex |\n| `actor` | New code | Compiler-enforced, no discipline needed |\n\n! Avoid `@synchronized` in new code. Never use the deprecated `OSSpinLock`." },
 
     { d: 'medium', q: 'Why is `OSSpinLock` deprecated?',
       a: "It **spins** in a tight loop waiting for the lock.\n\n1. The lock holder is a lower-priority thread\n2. The scheduler has descheduled it\n3. The spinning high-priority thread burns its whole quantum\n4. The holder never runs, never releases\n\n=> Unbounded priority inversion, which can hang the app. `os_unfair_lock` replaced it: it blocks in the kernel and participates in priority donation, so the holder gets boosted." },
 
-    { d: 'hard', q: 'Implement a thread-safe property using a reader-writer pattern.',
+    { d: 'hard', alias: 'Implement a thread-safe property using a reader-writer pattern.', q: 'How would you make a cache safe for concurrent reads and exclusive writes?',
       a: "```\nprivate let q = DispatchQueue(label: \"cache\", attributes: .concurrent)\nprivate var _items: [String: Data] = [:]\n\nvar items: [String: Data] { q.sync { _items } }\nfunc set(_ v: Data, for k: String) {\n    q.async(flags: .barrier) { self._items[k] = v }\n}\n```\n\n- Concurrent reads run in parallel\n- The barrier write waits for in-flight reads, runs alone, then lets reads resume\n\n! **Every** access must go through the queue. One unguarded read reintroduces the race\n! Barriers are ignored on the global queues\n\n```bad  one unguarded read reintroduces the race\nprivate let q = DispatchQueue(label: \"cache\", attributes: .concurrent)\nprivate var _items: [String: Data] = [:]\n\nvar items: [String: Data] { _items }                 // not on the queue\nfunc set(_ v: Data, for k: String) {\n    q.async(flags: .barrier) { self._items[k] = v }\n}\n```\n\n```good  every access goes through the queue\nvar items: [String: Data] { q.sync { _items } }\nfunc set(_ v: Data, for k: String) {\n    q.async(flags: .barrier) { self._items[k] = v }\n}\n```\n\n```good  or let the compiler enforce it\nactor Cache {\n    private var items: [String: Data] = [:]\n    func data(for k: String) -> Data? { items[k] }\n    func set(_ v: Data, for k: String) { items[k] = v }\n}\n```" },
 
     { d: 'medium', q: 'What is a deadlock and what are the classic conditions?',
@@ -117,7 +117,7 @@ IPREP.addTopic({
     { d: 'easy', q: 'What is a DispatchGroup for, and how do you use it?',
       a: "Waiting for a **set** of async tasks to all finish.\n\n```\nlet group = DispatchGroup()\nfor url in urls {\n    group.enter()\n    fetch(url) { _ in group.leave() }\n}\ngroup.notify(queue: .main) { self.render() }\n```\n\n! Use `notify`, not `wait`. `notify` schedules a callback and does not block; `wait` blocks the calling thread and must never run on the main queue." },
 
-    { d: 'medium', q: 'What are the failure modes of enter/leave?',
+    { d: 'medium', alias: 'What are the failure modes of enter/leave?', q: 'What goes wrong with DispatchGroup enter and leave?',
       a: "| Mistake | Symptom |\n|---|---|\n| More leaves than enters | **Immediate crash**, over-release of the group |\n| Missing leave on an error path | `notify` never fires, spinner spins forever |\n| Leave called twice | Crash |\n\nThe defence:\n```\ngroup.enter()\ndefer { group.leave() }   // covers every exit path\n```\n\n=> One `enter` per `leave`, at the same lexical level.\n\n```bad  the early return skips leave, so notify never fires\nfor url in urls {\n    group.enter()\n    fetch(url) { result in\n        guard let data = result else { return }      // leaked a group entry\n        store(data)\n        group.leave()\n    }\n}\n```\n\n```good  defer covers every exit path, including throws\nfor url in urls {\n    group.enter()\n    fetch(url) { result in\n        defer { group.leave() }\n        guard let data = result else { return }\n        store(data)\n    }\n}\n```" },
 
     { d: 'medium', q: 'What is a barrier block, and on which queues does it work?',
@@ -138,7 +138,7 @@ IPREP.addTopic({
     { d: 'medium', q: 'What does `asyncAfter` guarantee, and what does it not?',
       a: "+ It guarantees the block will not run **before** the deadline\n! It does **not** guarantee it runs **at** the deadline. The queue may be busy, and the system coalesces timers to save power, with more slack at lower QoS\n\n| Good for | Wrong for |\n|---|---|\n| Debounce, retry backoff | Audio scheduling, animation timing |\n\n=> For precision use `CADisplayLink` or a media-clock-based API." },
 
-    { d: 'hard', q: 'Write a debounce with GCD.',
+    { d: 'hard', alias: 'Write a debounce with GCD.', q: 'How would you debounce a search field using GCD?',
       a: "```\nprivate var pending: DispatchWorkItem?\nfunc search(_ text: String) {\n    pending?.cancel()\n    let item = DispatchWorkItem { [weak self] in self?.performSearch(text) }\n    pending = item\n    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: item)\n}\n```\n\n| | Debounce | Throttle |\n|---|---|---|\n| Behaviour | Cancels pending work, runs after quiet | Runs at most once per window |\n| Suits | Search-as-you-type | Scroll position reporting |\n\n=> Interviewers ask this because it tests `DispatchWorkItem`, cancellation semantics and that distinction in one question." },
 
     { d: 'medium', q: 'How do you add a timeout to a group of async work?',
@@ -171,10 +171,10 @@ IPREP.addTopic({
     { d: 'medium', q: 'What is the difference between a synchronous and an asynchronous Operation?',
       a: "By default an `Operation` is **finished when `main()` returns**, which is fine for CPU work.\n\n! If `main()` kicks off async work, the operation reports finished immediately and dependents run **too early**\n\nFor async work you must:\n- Override `isAsynchronous` to return true\n- Manage `isExecuting` and `isFinished` yourself\n- Fire the KVO notifications manually\n\n=> Getting that state machine right is the classic `Operation` interview question." },
 
-    { d: 'hard', q: 'Sketch a correct asynchronous Operation subclass.',
+    { d: 'hard', alias: 'Sketch a correct asynchronous Operation subclass.', q: 'How do you write an Operation that wraps asynchronous work?',
       a: "```\nclass AsyncOperation: Operation {\n    private var _executing = false, _finished = false\n    override var isAsynchronous: Bool { true }\n    override var isExecuting: Bool { _executing }\n    override var isFinished: Bool { _finished }\n\n    override func start() {\n        if isCancelled { finish(); return }\n        willChangeValue(forKey: \"isExecuting\")\n        _executing = true\n        didChangeValue(forKey: \"isExecuting\")\n        main()\n    }\n    func finish() {\n        willChangeValue(forKey: \"isExecuting\")\n        willChangeValue(forKey: \"isFinished\")\n        _executing = false; _finished = true\n        didChangeValue(forKey: \"isExecuting\")\n        didChangeValue(forKey: \"isFinished\")\n    }\n}\n```\n\n! You override `start()`, not just `main()`\n! Never call `super.start()`" },
 
-    { d: 'medium', q: 'How does cancellation work, and what is the responsibility split?',
+    { d: 'medium', alias: 'How does cancellation work, and what is the responsibility split?', q: 'What does cancelling an Operation actually do?',
       a: "`cancel()` sets `isCancelled` to true. **That is all it does.**\n\n| State | Effect |\n|---|---|\n| Not started | The queue will not start it |\n| Already running | **Nothing.** The body must check and return |\n\n- A long loop should test `isCancelled` each iteration\n- An async operation must also cancel its underlying request **and then call `finish()`**\n\n! Otherwise the queue waits forever on an operation that will never complete." },
 
     { d: 'hard', q: 'What are the failure modes of operation dependencies?',
@@ -222,13 +222,13 @@ IPREP.addTopic({
     { d: 'medium', q: 'What is structured concurrency and what does it buy you?',
       a: "Child tasks have a lifetime **bounded by their parent scope**, and the compiler enforces it.\n\n+ **Cancellation propagates** from parent to children\n+ **Errors propagate** out of the scope\n+ No orphaned tasks\n\n| | `async let` / `withTaskGroup` | `Task { }` |\n|---|---|---|\n| Structured | Yes | **No** |\n| Gets the above free | Yes | **No** |\n\n=> `Task { }` is the unstructured escape hatch and must manage its own cancellation and lifetime." },
 
-    { d: 'medium', q: 'Explain the cooperative thread pool.',
+    { d: 'medium', alias: 'Explain the cooperative thread pool.', q: 'How does Swift concurrency schedule work, and why must you never block a thread?',
       a: "Swift concurrency runs on a pool sized to the **number of cores**, not the number of tasks. Tasks are expected to **suspend rather than block**.\n\n! The hard rule: **never block a cooperative thread**\n! No `semaphore.wait()`, no `DispatchQueue.sync`, no synchronous file or network I/O\n\n- Blocking one thread removes a whole core from the pool\n- Blocking a few can deadlock the app\n\n=> This is the single most important operational fact about Swift concurrency." },
 
     { d: 'hard', q: 'What is an actor and what exactly does it guarantee?',
       a: "A reference type whose mutable state is **isolated**: all access goes through its serial executor, so there is never concurrent access to its stored properties.\n\n+ The compiler enforces it, requiring `await` for cross-actor access\n! It does **not** guarantee atomicity across suspension points\n\n=> An actor method that awaits mid-way can be interleaved with another call, so an invariant holding before the `await` may not hold after. That is **reentrancy**, and it is the main actor pitfall." },
 
-    { d: 'hard', q: 'Explain actor reentrancy with a concrete bug.',
+    { d: 'hard', alias: 'Explain actor reentrancy with a concrete bug.', q: 'An actor-based image cache downloads the same image twice. How is that possible?',
       a: "```\nactor ImageCache {\n    var cache: [URL: Image] = [:]\n    func image(for url: URL) async -> Image {\n        if let c = cache[url] { return c }\n        let img = await download(url)   // suspension\n        cache[url] = img\n        return img\n    }\n}\n```\n\n1. Two callers ask for the same URL\n2. Both miss the cache\n3. Both suspend at the download\n4. **You download twice**\n\n=> The actor prevented a data race, not duplicated work. Fix by storing the in-flight `Task` in the dictionary **before** awaiting, so the second caller awaits the same task.\n\n```bad  both callers miss, both suspend, both download\nactor ImageCache {\n    private var cache: [URL: Image] = [:]\n    func image(for url: URL) async throws -> Image {\n        if let c = cache[url] { return c }\n        let img = try await download(url)      // suspension: another call runs\n        cache[url] = img\n        return img\n    }\n}\n```\n\n```good  publish the in-flight task before awaiting\nactor ImageCache {\n    private enum Entry { case ready(Image), loading(Task<Image, Error>) }\n    private var cache: [URL: Entry] = [:]\n\n    func image(for url: URL) async throws -> Image {\n        switch cache[url] {\n        case .ready(let img):   return img\n        case .loading(let t):   return try await t.value   // join it\n        case nil:               break\n        }\n        let task = Task { try await self.download(url) }\n        cache[url] = .loading(task)            // published BEFORE the await\n        do {\n            let img = try await task.value\n            cache[url] = .ready(img)\n            return img\n        } catch {\n            cache[url] = nil                   // let the next caller retry\n            throw error\n        }\n    }\n}\n```" },
 
     { d: 'medium', q: 'What is `@MainActor` and how does it replace `DispatchQueue.main.async`?',

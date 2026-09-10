@@ -5,7 +5,11 @@ IPREP.addTopic({
   title: 'UIViewController Lifecycle',
   summary: 'The callback order, what is safe in each, and the containment API.',
   cards: [
-    { d: 'easy', q: 'List the view controller lifecycle callbacks in order.',
+
+    { d: 'easy', q: 'What is the difference between `viewDidLoad` and `viewDidAppear`? Which would you use to load data from a server?',
+      a: "| | `viewDidLoad` | `viewDidAppear` |\n|---|---|---|\n| Fires | **Once** per view load | **Every** time the view becomes visible |\n| View is laid out | No | Yes |\n| Good for | One-time setup, starting the first fetch | Work that must repeat, analytics, resuming a video |\n\n=> For a **one-off** load, `viewDidLoad`, so the request is already in flight while the view appears. For data that must be **fresh every time the screen is shown**, `viewDidAppear`, and guard against overlapping requests.\n\n! Never load in `viewWillAppear` and stop in `viewDidDisappear`: a cancelled back-swipe fires the first without the second, leaving you unbalanced." },
+
+    { d: 'easy', alias: 'List the view controller lifecycle callbacks in order.', q: 'Walk me through the view controller lifecycle.',
       a: "`loadView` → `viewDidLoad` → `viewWillAppear` → `viewWillLayoutSubviews` → `viewDidLayoutSubviews` → `viewDidAppear` → `viewWillDisappear` → `viewDidDisappear`\n\n| Callback | Fires |\n|---|---|\n| `viewDidLoad` | **Exactly once** per view load |\n| `viewWillAppear` / `viewDidAppear` | Every appearance |\n| `viewWillLayoutSubviews` / `viewDidLayoutSubviews` | **Many times**: every bounds change, rotation, keyboard |" },
 
     { d: 'medium', q: 'What is safe in `viewDidLoad` and what is not?',
@@ -20,7 +24,7 @@ IPREP.addTopic({
     { d: 'medium', q: 'What is `loadView` for and when do you override it?',
       a: "It is responsible for **creating `self.view`**. Override it when building the hierarchy in code with a custom root view class.\n\n```\noverride func loadView() { view = ProfileView() }\n```\n\n! Never call `super.loadView()` in that override\n! Never touch `self.view` inside it. Accessing `view` triggers `loadView`, so you recurse\n! Do not override it at all when using a storyboard or nib" },
 
-    { d: 'hard', q: 'Explain view controller containment and the exact call order.',
+    { d: 'hard', alias: 'Explain view controller containment and the exact call order.', q: 'How do you add a child view controller correctly?',
       a: "```\naddChild(child)\nview.addSubview(child.view)\nchild.view.frame = ...\nchild.didMove(toParent: self)\n\n// removal\nchild.willMove(toParent: nil)\nchild.view.removeFromSuperview()\nchild.removeFromParent()\n```\n\n- `addChild` calls `willMove(toParent:)` for you, which is why you only call `didMove` explicitly on add\n- `removeFromParent` calls `didMove(toParent: nil)` for you\n\n! Skip these and the child never receives appearance, rotation or trait callbacks. That is the classic 'my child's viewWillAppear never fires' bug." },
 
     { d: 'medium', q: 'What happened to `didReceiveMemoryWarning` and view unloading?',
@@ -59,16 +63,16 @@ IPREP.addTopic({
     { d: 'easy', q: 'What is the relationship between UIView and CALayer?',
       a: "Every `UIView` is **backed by** a `CALayer` that owns the actual drawing: backing store, transform, corner radius, shadow.\n\nThe view adds on top:\n- Event handling and the responder chain\n- Auto Layout participation\n- An animation-friendly API\n\n=> So a view is a thin, interactive wrapper around a layer. Changing `view.layer.transform` directly bypasses UIView animation semantics, which is why the two APIs sometimes disagree." },
 
-    { d: 'medium', q: 'Explain `setNeedsLayout`, `layoutIfNeeded` and `layoutSubviews`.',
+    { d: 'medium', alias: 'Explain `setNeedsLayout`, `layoutIfNeeded` and `layoutSubviews`.', q: 'What is the difference between `setNeedsLayout`, `layoutIfNeeded` and `layoutSubviews`?',
       a: "| Call | Does | You |\n|---|---|---|\n| `setNeedsLayout()` | Marks dirty, returns immediately | **Call this** |\n| `layoutIfNeeded()` | Forces pending layout **now**, synchronously | Call before animating |\n| `layoutSubviews()` | Where layout happens | **Override, never call** |\n\n! Calling `layoutSubviews` directly is always wrong\n! Calling `layoutIfNeeded` in a loop is a performance bug" },
 
     { d: 'medium', q: 'What is the difference between the layout pass and the display pass?',
       a: "| Pass | Produces | Invalidate with | Callback |\n|---|---|---|---|\n| **Layout** | Geometry, frames | `setNeedsLayout` | `layoutSubviews` |\n| **Display** | Pixels in a backing store | `setNeedsDisplay` | `draw(_:)` |\n\n- Layout runs top-down\n- Both flush before the frame is committed\n\n=> Confusing the two is why people call `setNeedsDisplay` expecting a reposition and get nothing." },
 
-    { d: 'hard', q: 'Describe the full frame lifecycle from a touch to pixels on screen.',
+    { d: 'hard', alias: 'Describe the full frame lifecycle from a touch to pixels on screen.', q: 'What happens between a touch and the pixels appearing on screen?',
       a: "1. **Touch delivered.** Your handler mutates state and calls `setNeedsLayout`\n2. **Layout pass.** Constraints solved, `layoutSubviews` runs top-down\n3. **Display pass.** Dirty views run `draw(_:)` into their backing store\n4. **Commit.** The layer tree is encoded and sent over IPC to the render server\n5. **Composite.** GPU composites and hands the result to the display at the next vsync\n\n! Missing 16.7 ms, or 8.3 ms at 120 Hz, at **any** stage drops a frame.\n\n=> Which is why heavy work in `layoutSubviews` or `draw(_:)` shows up as jank." },
 
-    { d: 'medium', q: 'What is the difference between `frame` and `bounds`?',
+    { d: 'medium', alias: 'What is the difference between `frame` and `bounds`?', q: 'What is the difference between the frame and the bounds of a UIView?',
       a: "| | `frame` | `bounds` |\n|---|---|---|\n| Coordinate space | The **superview's** | **Its own** |\n| Origin | Position in the parent | Usually `.zero` |\n| Under a transform | **Undefined** | Still valid |\n\nTwo consequences:\n- Setting `bounds.origin` **scrolls the content**. That is exactly how `UIScrollView` works\n- With a non-identity transform, set `bounds` and `center`, never `frame`, because a rotated rectangle has no meaningful axis-aligned frame" },
 
     { d: 'hard', q: 'Why is `draw(_:)` expensive and how do you avoid it?',
@@ -113,7 +117,7 @@ IPREP.addTopic({
     { d: 'easy', q: 'What is Auto Layout actually doing?',
       a: "Converting your constraints into a system of **linear equations and inequalities** and solving them with the Cassowary algorithm to produce frames.\n\nEach constraint is:\n```\nitem1.attr1 = multiplier * item2.attr2 + constant\n```\nwith a priority.\n\n=> The solver satisfies every **required** (1000) constraint while getting as close as it can to the optional ones." },
 
-    { d: 'medium', q: 'Explain content hugging versus compression resistance.',
+    { d: 'medium', alias: 'Explain content hugging versus compression resistance.', q: 'What is the difference between content hugging and compression resistance?',
       a: "Both are priorities on a view's intrinsic content size.\n\n| | Resists | High value means |\n|---|---|---|\n| **Content hugging** | Growing larger | 'Stay small' |\n| **Compression resistance** | Shrinking smaller | 'Do not truncate me' |\n\n=> The classic case: two labels side by side, the wrong one truncating. Raise the **compression resistance** of the one that must stay whole, or lower the hugging of the one that should absorb the slack." },
 
     { d: 'medium', q: 'What does a constraint priority of 1000 versus 999 change?',
@@ -137,7 +141,7 @@ IPREP.addTopic({
     { d: 'medium', q: 'What does `UIStackView` do for you and what does it cost?',
       a: "+ Generates and maintains constraints for a linear arrangement: `axis`, `distribution`, `alignment`, `spacing`\n+ Responds to `isHidden` on arranged subviews by **collapsing** them, which is genuinely useful\n! It is constraints underneath, so deep nesting can be slower than a flat set\n! Debugging a conflict inside one is harder, because you did not write the constraints\n\n=> Two or three levels is fine. Six is a smell." },
 
-    { d: 'hard', q: 'Explain `updateConstraints` and why you usually should not override it.',
+    { d: 'hard', alias: 'Explain `updateConstraints` and why you usually should not override it.', q: 'When should you override `updateConstraints`?',
       a: "A **batching hook**: mark dirty with `setNeedsUpdateConstraints()` and UIKit calls it once before layout.\n\n! Apple's guidance is that changing constraints directly in place is usually **faster**, because `updateConstraints` adds a whole extra pass\n\n=> Override it only when you are provably rebuilding many constraints repeatedly. If you do, always call `super` **last**." },
 
     { d: 'medium', q: 'How do self-sizing table view cells work?',
@@ -221,7 +225,7 @@ IPREP.addTopic({
     { d: 'easy', q: 'What is the responder chain?',
       a: "An ordered list of objects that each get a chance to handle an event:\n\n**first responder → superviews up the hierarchy → view controller → window → application → app delegate**\n\nEach `UIResponder` either handles the event or calls `super`, passing it along.\n\n=> It is what makes `sendAction(_:to:nil:for:)` with a nil target work: the action travels the chain until something responds to that selector." },
 
-    { d: 'medium', q: 'Describe hit testing, precisely.',
+    { d: 'medium', alias: 'Describe hit testing, precisely.', q: 'How does UIKit decide which view receives a touch?',
       a: "UIKit calls `hitTest(_:with:)` on the window and recurses **depth-first in reverse subview order**, topmost first.\n\n1. For each view, call `point(inside:with:)`\n2. If false, **skip that whole branch**\n3. The deepest view returning itself wins\n\nA view is skipped entirely if:\n! `isHidden`\n! `alpha <= 0.01`\n! `isUserInteractionEnabled == false`\n\n=> Hit testing **finds** the target. The responder chain **propagates** from it. Two different systems." },
 
     { d: 'hard', q: 'A button outside its parent view bounds does not respond. Why, and how do you fix it?',
@@ -278,7 +282,7 @@ IPREP.addTopic({
     { d: 'hard', q: 'How do you stop a standalone sublayer from animating its frame on every layout?',
       a: "```\nCATransaction.begin()\nCATransaction.setDisableActions(true)\ngradientLayer.frame = bounds\nCATransaction.commit()\n```\n\nOr return `NSNull` from the layer delegate's `action(for:forKey:)`.\n\n! Without this, resizing on rotation or keyboard appearance produces a visible quarter-second lag as the sublayer animates to catch up." },
 
-    { d: 'medium', q: 'Explain `fillMode` and `isRemovedOnCompletion`.',
+    { d: 'medium', alias: 'Explain `fillMode` and `isRemovedOnCompletion`.', q: 'Why does a view snap back to its old state after a CAAnimation finishes?',
       a: "A `CAAnimation` **does not change the model layer.** It only affects the presentation, and on completion it is removed and the layer snaps back.\n\n! Setting `isRemovedOnCompletion = false` plus `fillMode = .forwards` makes it **look** finished. That is a lie:\n! The model value is unchanged\n! Hit testing uses the old value\n! Subsequent layout uses the old value\n! Any read of the property returns the old value\n\n=> The correct fix is to set the model property to the final value and animate **from** the old one." },
 
     { d: 'hard', q: 'What is the difference between UIView animation and CAAnimation?',
@@ -323,7 +327,7 @@ IPREP.addTopic({
     { d: 'easy', q: 'What problem does the coordinator pattern solve?',
       a: "In plain UIKit, a view controller **pushes the next one**, which means it knows about its successor, constructs its dependencies, and cannot be reused elsewhere.\n\n! Navigation logic ends up scattered across every screen.\n\nA coordinator owns the flow: it creates controllers, injects dependencies, and decides what happens on each outcome. The controller just **reports events**.\n\n=> Screens become reusable, and the flow becomes readable and testable in one file." },
 
-    { d: 'medium', q: 'Sketch the shape of a coordinator.',
+    { d: 'medium', alias: 'Sketch the shape of a coordinator.', q: 'What does a coordinator look like in code?',
       a: "```\nprotocol Coordinator: AnyObject {\n    var childCoordinators: [Coordinator] { get set }\n    func start()\n}\n\nfinal class OnboardingCoordinator: Coordinator {\n    var childCoordinators: [Coordinator] = []\n    private let nav: UINavigationController\n    func start() {\n        let vc = WelcomeViewController()\n        vc.onContinue = { [weak self] in self?.showSignUp() }\n        nav.pushViewController(vc, animated: false)\n    }\n}\n```\n\n! The crucial discipline: **remove a child when its flow ends**, or you leak the whole subtree." },
 
     { d: 'hard', q: 'What is the hardest part of coordinators in practice?',

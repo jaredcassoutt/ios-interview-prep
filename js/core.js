@@ -37,7 +37,9 @@
         c.topic = t.id;
         c.domain = t.domain;
         c.d = c.d || 'medium';
-        c.key = 'c' + hash(c.q);
+        // `alias` holds the original wording of a reworded question, so the
+        // scheduling key stays stable and existing progress is preserved.
+        c.key = 'c' + hash(c.alias || c.q);
       });
       t.quiz.forEach(function (q) {
         q.topic = t.id;

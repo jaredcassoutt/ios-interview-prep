@@ -32,8 +32,9 @@
 
   var attached = {};
   IPREP.allCards().forEach(function (card) {
+    var haystack = card.q + ' \u0000 ' + (card.alias || '');
     for (var i = 0; i < MAP.length; i++) {
-      if (card.q.indexOf(MAP[i][1]) >= 0) {
+      if (haystack.indexOf(MAP[i][1]) >= 0) {
         card.fig = MAP[i][0];
         attached[MAP[i][0]] = (attached[MAP[i][0]] || 0) + 1;
         return;

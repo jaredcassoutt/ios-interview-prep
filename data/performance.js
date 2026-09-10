@@ -5,7 +5,7 @@ IPREP.addTopic({
   title: 'Memory Management & Instruments',
   summary: 'Finding leaks and abandoned memory, image footprint, and the jetsam limits.',
   cards: [
-    { d: 'easy', q: 'What is the difference between a leak and abandoned memory?',
+    { d: 'easy', alias: 'What is the difference between a leak and abandoned memory?', q: 'What is the difference between a memory leak and abandoned memory?',
       a: "Both grow. Only one is findable with the Leaks tool.\n\n| | Leak | Abandoned |\n|---|---|---|\n| Still referenced | No | **Yes** |\n| Usual cause | A retain cycle | An unbounded cache, unpopped controllers, unremoved observers |\n| Found with | Leaks, Memory Graph | Allocations with generation marks |\n\n=> To find abandoned memory: mark a generation, do a round trip that should return to the starting state, mark again, and inspect what survived." },
 
     { d: 'medium', q: 'How do you use the Memory Graph Debugger?',
@@ -20,7 +20,7 @@ IPREP.addTopic({
     { d: 'medium', q: 'What is the difference between the Allocations and Leaks instruments?',
       a: "| Tool | Answers | Use for |\n|---|---|---|\n| **Allocations** | What is growing? | Abandoned memory, growth over time, generation marks |\n| **Leaks** | What is definitively unreachable? | Retain cycles |\n\n=> A **rising Allocations graph with a flat Leaks count** is the signature of abandoned memory. Saying that out loud in an interview signals you have actually used both." },
 
-    { d: 'hard', q: 'Your app grows by 5MB every time the user opens and closes a screen. Walk through the diagnosis.',
+    { d: 'hard', alias: 'Your app grows by 5MB every time the user opens and closes a screen. Walk through the diagnosis.', q: 'Your app grows by 5MB every time the user opens and closes a screen. How do you find the cause?',
       a: "1. **Reproduce deterministically.** Open and close ten times\n2. **Memory Graph**, filter for the view controller class. More than one live instance means it is retained\n3. **Follow inbound references** to the retainer, rather than guessing\n4. If exactly one instance survives, the growth is elsewhere: **Allocations with generation marks**\n5. Fix, then re-run the same ten-cycle test and confirm a return to baseline\n\nUsual culprits:\n- A closure capturing self stored on a long-lived service\n- A block-based `NotificationCenter` observer never removed\n- A strong delegate\n- A `Timer` never invalidated\n- A child coordinator never removed from its parent" },
 
     { d: 'medium', q: 'What is `NSCache` and why prefer it to a dictionary?',
@@ -59,7 +59,7 @@ IPREP.addTopic({
     { d: 'easy', q: 'What is the frame budget and what does missing it look like?',
       a: "| Refresh rate | Budget per frame |\n|---|---|\n| 60 Hz | **16.7 ms** |\n| 120 Hz ProMotion | **8.3 ms** |\n\nThat budget covers main-thread work, layout, drawing, the commit, and GPU compositing combined.\n\n=> Missing it shows the previous frame again, which reads as a stutter. Apple calls this a **hitch** and measures it as hitch time per second of scrolling. One 200ms hang is far worse perceptually than twenty 20ms ones." },
 
-    { d: 'medium', q: 'Name the main causes of dropped frames while scrolling.',
+    { d: 'medium', alias: 'Name the main causes of dropped frames while scrolling.', q: 'What usually causes dropped frames while scrolling?',
       a: "In rough order of how often they are the real cause:\n\n! Synchronous work on the main thread: JSON decoding, disk I/O, image decoding\n! Expensive `layoutSubviews` or heavy Auto Layout in complex cells\n! Custom `draw(_:)` rasterising on the CPU\n! Offscreen rendering from a shadow with no `shadowPath`, or masks\n! Blending from non-opaque views stacked deep\n! Allocating views in `cellForRowAt` instead of reusing\n! Blocking on a lock or a semaphore\n\n=> The first two account for most real cases. Check them before anything else." },
 
     { d: 'medium', q: 'How do you find a scroll hitch with Instruments?',
@@ -68,7 +68,7 @@ IPREP.addTopic({
     { d: 'hard', q: 'What is blending and why does it cost?',
       a: "When a layer is not opaque, the GPU must **read what is behind it and combine per pixel**, for every overlapping layer. Eight translucent views means eight reads and blends per pixel.\n\nThe fix:\n- Set `isOpaque = true`\n- Give the view a solid `backgroundColor`\n\n! A view with a **clear** background colour is not opaque, even if it looks solid. `UILabel` with a clear background is the single most common blended layer in a cell.\n\n=> Find them with Color Blended Layers in the simulator's Debug menu. Green is opaque, red is blended, and a mostly-red screen is a real finding.\n\n```bad  clear background: the GPU blends against everything behind\ntitleLabel.backgroundColor = .clear\n```\n\n```good  opaque, so nothing behind needs reading\ntitleLabel.backgroundColor = .systemBackground\ntitleLabel.isOpaque = true\n```\n\nCheck it with **Color Blended Layers** in the simulator Debug menu. Green is opaque, red is blended." },
 
-    { d: 'hard', q: 'Explain image decoding as a scroll hazard and give the fix.',
+    { d: 'hard', alias: 'Explain image decoding as a scroll hazard and give the fix.', q: 'Why does loading images cause scroll jank, and how do you fix it?',
       a: "`UIImage(named:)` and `UIImage(data:)` **do not decode immediately**. Decoding happens lazily on the main thread the first time the image is drawn, which is mid-scroll.\n\n```\nlet opts: [CFString: Any] = [\n  kCGImageSourceCreateThumbnailFromImageAlways: true,\n  kCGImageSourceThumbnailMaxPixelSize: maxDim,\n  kCGImageSourceShouldCacheImmediately: true\n]\nlet src = CGImageSourceCreateWithURL(url as CFURL, nil)!\nlet cg = CGImageSourceCreateThumbnailAtIndex(src, 0, opts as CFDictionary)!\n```\n\n=> That downsamples **and** forces the decode off the main thread in one step, so the main thread only composites an already-decoded bitmap." },
 
     { d: 'medium', q: 'What does `isOpaque` actually do?',
@@ -113,7 +113,7 @@ IPREP.addTopic({
     { d: 'medium', q: 'What is the radio tail and why does it dominate network energy?',
       a: "After a transfer, the cellular radio **stays in a high-power state for several seconds** in case more data arrives.\n\n! A 1 KB request can cost about as much energy as a 100 KB one.\n\nWhat follows:\n- **Batch** requests rather than trickling them\n- **Prefetch** what you will plausibly need in the same window\n- Use discretionary background transfers so the system can coalesce your traffic with other apps'\n- **Never poll on a timer**" },
 
-    { d: 'medium', q: 'Compare the background execution modes.',
+    { d: 'medium', alias: 'Compare the background execution modes.', q: 'What are the ways to run code while your app is in the background?',
       a: "| Mode | Duration | For |\n|---|---|---|\n| `BGAppRefreshTask` | Seconds, opportunistic | Refreshing content |\n| `BGProcessingTask` | Minutes, usually overnight while charging | Maintenance, ML, cleanup |\n| Background `URLSession` | Out of process, can relaunch you | **The only reliable way to finish a large download** |\n| Silent push | Best-effort, throttled | Server-initiated wake-up |\n| Declared modes (audio, location, VoIP) | Continuous | Real ongoing work; App Review requires genuine use |\n\n=> **None of them is a guarantee.** The system decides." },
 
     { d: 'hard', q: 'What are the practical rules for `BGTaskScheduler`?',

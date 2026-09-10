@@ -5,7 +5,7 @@ IPREP.addTopic({
   title: 'Array & NSArray',
   summary: 'Ordered storage: complexity, growth, mutation, and the Foundation counterparts.',
   cards: [
-    { d: 'easy', q: 'Give the complexity of the common Array operations.',
+    { d: 'easy', alias: 'Give the complexity of the common Array operations.', q: 'What is the time complexity of the common Array operations?',
       a: "| Operation | Cost |\n|---|---|\n| `subscript(i)` read or write | **O(1)** |\n| `append` | **Amortised O(1)**, O(n) on the resize |\n| `insert(at:)` / `remove(at:)` | **O(n)**, everything after shifts |\n| `contains` / `firstIndex(of:)` | **O(n)** linear scan |\n| `sort` | **O(n log n)**, introsort |\n| `reserveCapacity` | O(n) once, then no reallocation |\n\n=> Repeated insertion at the front is the accidental O(n^2) people ship most often." },
 
     { d: 'medium', q: 'How does Array grow, and why is append amortised O(1)?',
@@ -56,10 +56,10 @@ IPREP.addTopic({
   title: 'Dictionary, Hashable & NSDictionary',
   summary: 'Hash tables in Swift and Foundation: complexity, hashing contracts, and the classic bugs.',
   cards: [
-    { d: 'easy', q: 'Complexity of Dictionary operations, and what makes them that fast?',
+    { d: 'easy', alias: 'Complexity of Dictionary operations, and what makes them that fast?', q: 'How fast is a Dictionary lookup, and what makes it that fast?',
       a: "Lookup, insert and delete are **average O(1)**, worst case O(n) when every key collides.\n\nWhy:\n- The key is hashed to a bucket index\n- Swift uses open addressing with linear probing over a power-of-two table\n- It grows and rehashes when the load factor rises, an O(n) cost amortised across insertions\n\n=> The O(n) worst case is not theoretical: it is exactly what a hash-flooding attack produces, which is why Swift randomises its seed." },
 
-    { d: 'medium', q: 'State the Hashable contract.',
+    { d: 'medium', alias: 'State the Hashable contract.', q: 'What contract does Hashable require you to uphold?',
       a: "**If `a == b` then `a.hashValue == b.hashValue`.** The converse need not hold; equal hashes for unequal values is a collision, which is legal and merely slower.\n\nTwo rules follow:\n- `hash(into:)` must feed **exactly** the properties `==` compares, no more and no fewer\n- The hash must stay stable for as long as the value is in a set or used as a key\n\n=> That second rule is why mutable reference types make dangerous keys." },
 
     { d: 'hard', q: 'What breaks if you mutate an object after using it as a dictionary key?',
@@ -110,7 +110,7 @@ IPREP.addTopic({
     { d: 'easy', q: 'When should you reach for a Set instead of an Array?',
       a: "When you need **membership testing** or **uniqueness**, and order does not matter.\n\n| | Array | Set |\n|---|---|---|\n| `contains` | O(n) | **O(1) average** |\n| Order | Preserved | None |\n| Duplicates | Allowed | Removed |\n\n=> The classic refactor: a loop calling `array.contains(x)` inside another loop over n items is O(n^2). Converting the inner collection to a Set makes it O(n)." },
 
-    { d: 'medium', q: 'Name the set algebra operations and their meaning.',
+    { d: 'medium', alias: 'Name the set algebra operations and their meaning.', q: 'What set operations does Swift\'s Set give you?',
       a: "| Operation | Returns |\n|---|---|\n| `union` | In either |\n| `intersection` | In both |\n| `subtracting` | In the first, not the second |\n| `symmetricDifference` | In exactly one |\n| `isSubset(of:)` / `isSuperset(of:)` / `isDisjoint(with:)` | A Bool |\n\n- Each has a mutating form: `formUnion`, `formIntersection`, `subtract`, `formSymmetricDifference`\n\n=> All are roughly O(n) in the smaller set, versus the O(n*m) you would hand-write with arrays." },
 
     { d: 'medium', q: 'How would you diff two lists of items for a table view update using sets?',
@@ -153,6 +153,10 @@ IPREP.addTopic({
   title: 'Codable, JSON & Serialization',
   summary: 'Encoding and decoding, custom keys, error handling, and where Codable stops being enough.',
   cards: [
+
+    { d: 'easy', q: 'How would you turn a JSON response into a Swift object?',
+      a: "Two routes. Reach for the first unless the shape is genuinely unknown.\n\n```good  Codable: type-safe, compile-time checked\nstruct User: Decodable {\n    let id: Int\n    let name: String\n}\n\nlet user = try JSONDecoder().decode(User.self, from: data)\nlet users = try JSONDecoder().decode([User].self, from: data)\n```\n\n```bad  JSONSerialization: no type safety, casts everywhere\nlet obj = try JSONSerialization.jsonObject(with: data) as? [String: Any]\nlet name = obj?[\"name\"] as? String        // every field is a maybe\n```\n\n=> `JSONSerialization` still earns its place when the schema is dynamic and you genuinely do not know the keys ahead of time. For anything with a contract, `Codable` moves the failure from a crash at runtime to an error you can handle." },
+
     { d: 'easy', q: 'What does Codable actually generate for you?',
       a: "`Codable` is `Decodable & Encodable`. For a type whose stored properties are all Codable, the compiler synthesises:\n\n- A `CodingKeys` enum matching the property names\n- `init(from:)`\n- `encode(to:)`\n\n! The moment you write **any one** of those yourself, synthesis stops for that protocol and you own all of it.\n\n=> Synthesis is per-protocol, so writing `init(from:)` still leaves `encode(to:)` generated." },
 

@@ -18,7 +18,7 @@ Two options:
 | | |
 |---|---|
 | Topics | 38, across 7 domains |
-| Flashcards | 389, scheduled with SM-2 spaced repetition |
+| Flashcards | 392, scheduled with SM-2 spaced repetition |
 | Quiz questions | 227 multiple choice, with explanations |
 | Coding challenges | 30, with hints, reference solutions, and interviewer notes |
 | Mock interview prompts | 21, with self-scoring rubrics and follow-ups |
@@ -77,6 +77,24 @@ Progress is written to the browser's `localStorage`, keyed to the origin. In pra
 
 Settings has **Download backup** and **Restore from file** for moving progress between
 devices, plus a copy/paste text version for when a file is inconvenient.
+
+## How questions are worded
+
+Questions are phrased the way an interviewer actually asks them, not as textbook headings.
+The reference points were published question banks and Google iOS interview write-ups,
+where the two recurring shapes are the blunt one ("What is the difference between weak,
+strong and unowned?") and the Google-style prompt ("Explain Grand Central Dispatch and when
+you would use it in an iOS application").
+
+52 questions were rewritten from heading-style to interview-style. Each keeps its original
+wording in an `alias` field, and `js/core.js` derives the scheduling key from
+`alias || q`, so rewording a question never resets its review history or detaches its
+diagram.
+
+```
+alias: 'State the Hashable contract.',
+q: 'What contract does Hashable require you to uphold?',
+```
 
 ## How answers are written
 

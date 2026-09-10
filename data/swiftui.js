@@ -8,10 +8,10 @@ IPREP.addTopic({
     { d: 'easy', q: 'What is a SwiftUI `View`, really?',
       a: "**A value type describing what the UI should look like for a given state.** Not an object that persists on screen.\n\n- Your struct is created and thrown away constantly\n- The persistent thing is the **render tree** SwiftUI maintains behind it, plus the state attached to each node\n\n=> Closer to a recipe than to a `UIView`. This single fact explains why `body` runs dozens of times, why `@State` lives outside the struct, and why side effects in `body` are a bug." },
 
-    { d: 'medium', q: 'How often does `body` run, and what follows from that?',
+    { d: 'medium', alias: 'How often does `body` run, and what follows from that?', q: 'How often does `body` run, and what does that mean for what you put in it?',
       a: "Whenever any tracked dependency changes, and often more than you expect. **It is cheap by design and you must treat it as such.**\n\n! No network calls, analytics, or state mutation in `body`\n! No allocating expensive objects\n! No `Date()` or `UUID()` unless you want a different value each pass\n\n=> Expensive computation belongs in the model or a cached property. Side effects belong in `.task`, `.onAppear` or `.onChange`.\n\n```bad  a side effect and a new formatter on every render\nvar body: some View {\n    analytics.track(\"row_shown\")\n    let formatter = DateFormatter()\n    formatter.dateStyle = .medium\n    return Text(formatter.string(from: post.date))\n}\n```\n\n```good  formatter hoisted, side effect moved to a lifecycle hook\nprivate static let formatter: DateFormatter = {\n    let f = DateFormatter(); f.dateStyle = .medium; return f\n}()\n\nvar body: some View {\n    Text(Self.formatter.string(from: post.date))\n        .onAppear { analytics.track(\"row_shown\") }\n}\n```" },
 
-    { d: 'hard', q: 'Explain structural identity versus explicit identity.',
+    { d: 'hard', alias: 'Explain structural identity versus explicit identity.', q: 'What is the difference between structural and explicit identity in SwiftUI?',
       a: "| | Structural | Explicit |\n|---|---|---|\n| Comes from | Position in the view tree | `.id(value)` or a `ForEach` identifier |\n| Example | Two branches of `if/else` are **different** identities | You assign it |\n\n=> Identity is how SwiftUI decides 'is this the same view as last time, or a new one?' That decision determines whether **state is preserved**, and whether a change **animates or replaces**." },
 
     { d: 'hard', q: 'Why does `@State` reset unexpectedly, and how does identity cause it?',
@@ -59,7 +59,7 @@ IPREP.addTopic({
   title: 'State & Data Flow',
   summary: 'The property wrappers, which one owns the truth, and the bugs each causes.',
   cards: [
-    { d: 'easy', q: 'Name each state property wrapper and what it owns.',
+    { d: 'easy', alias: 'Name each state property wrapper and what it owns.', q: 'When do you use `@State`, `@Binding`, `@StateObject` and `@ObservedObject`?',
       a: "| Wrapper | Owns | Notes |\n|---|---|---|\n| `@State` | **This view owns** value-type state | Mark it `private` |\n| `@Binding` | Nothing | A two-way reference to state owned elsewhere |\n| `@StateObject` | **This view owns** a reference type | Controls its lifetime |\n| `@ObservedObject` | Nothing | Observes an object owned elsewhere |\n| `@EnvironmentObject` | Nothing | Pulls from the environment by type |\n| `@Environment` | Nothing | Reads a system or custom value |\n\n=> The whole system reduces to one question: **who owns this, and who is just reading it?**" },
 
     { d: 'hard', q: 'What is the difference between `@StateObject` and `@ObservedObject`, and what breaks?',
@@ -77,7 +77,7 @@ IPREP.addTopic({
     { d: 'medium', q: 'What is `@Environment` for, beyond system values?',
       a: "It reads environment values: `\\.colorScheme`, `\\.dismiss`, `\\.dynamicTypeSize`, `\\.scenePhase`, `\\.isEnabled`.\n\n+ You can define your own with an `EnvironmentKey`, which is the idiomatic way to pass configuration down a subtree without a global\n+ Since iOS 17 it also reads `@Observable` objects by type\n\n=> That last point replaces much of what `@EnvironmentObject` did, without the separate wrapper." },
 
-    { d: 'medium', q: 'State the single-source-of-truth rule and why it matters.',
+    { d: 'medium', alias: 'State the single-source-of-truth rule and why it matters.', q: 'What does single source of truth mean in SwiftUI, and why does it matter?',
       a: "**Every piece of state has exactly one owner.** Everyone else derives from it or holds a binding to it.\n\n! Duplicating state, such as copying a model value into `@State` in `onAppear`, creates two truths that **drift**\n! When they disagree the UI shows one and the model has the other, and the bug appears only after a specific sequence of edits\n\n=> When you feel the urge to copy, ask whether it can be **computed** instead. Derived values should be computed properties, not stored state." },
 
     { d: 'hard', q: 'Where should state live when two sibling views need it?',
@@ -162,7 +162,7 @@ IPREP.addTopic({
   title: 'The SwiftUI Layout System',
   summary: 'Proposal and response, stacks, frames, GeometryReader, and the custom Layout protocol.',
   cards: [
-    { d: 'easy', q: 'Describe the SwiftUI layout algorithm in three steps.',
+    { d: 'easy', alias: 'Describe the SwiftUI layout algorithm in three steps.', q: 'How does SwiftUI decide how big a view should be?',
       a: "1. **The parent proposes** a size. It may propose `nil` in a dimension, meaning 'tell me your ideal'\n2. **The child chooses** its own size. It is not forced\n3. **The parent places** the child in its own coordinate space\n\n=> The key insight candidates miss: **the child decides.** A parent cannot impose a size, only propose one.\n\nWhich is why `.frame()` does not resize a child so much as create a new parent that proposes differently." },
 
     { d: 'medium', q: 'What does `.frame(width:height:)` actually do?',
@@ -279,7 +279,7 @@ IPREP.addTopic({
     { d: 'medium', q: 'How do you dismiss a view in SwiftUI?',
       a: "```\n@Environment(\\.dismiss) private var dismiss\nButton(\"Close\") { dismiss() }\n```\n\n+ Works for **both** a pushed view and a modal, dismissing whichever presentation this view belongs to\n+ Replaced the older `presentationMode` binding\n\n=> You can also flip the `isPresented` binding from the presenter, but `dismiss` keeps the child from needing to know how it was shown." },
 
-    { d: 'medium', q: 'Compare `sheet`, `fullScreenCover` and `popover`.',
+    { d: 'medium', alias: 'Compare `sheet`, `fullScreenCover` and `popover`.', q: 'What is the difference between `sheet`, `fullScreenCover` and `popover`?',
       a: "| Modifier | Behaviour |\n|---|---|\n| `.sheet` | A card; presenter stays visible. Resizable with `.presentationDetents` |\n| `.fullScreenCover` | Covers everything. Right for onboarding or an immersive flow |\n| `.popover` | Anchored on iPad and Mac; falls back to a sheet on iPhone unless you set `.presentationCompactAdaptation` |\n\n=> Prefer the `item:` variants over `isPresented:` plus a separate state value. They make it impossible to present with stale or missing data." },
 
     { d: 'hard', q: 'Why is `.sheet(item:)` better than `.sheet(isPresented:)`?',
@@ -327,7 +327,7 @@ IPREP.addTopic({
     { d: 'medium', q: 'What is a `transition` and how does it differ from an animation?',
       a: "| | Transition | Animation |\n|---|---|---|\n| Describes | How a view is **inserted or removed** | How a **property changes** on a view that stays |\n| Examples | `.opacity`, `.slide`, `.scale` | Position, colour, size |\n\n! `.transition(.slide)` only takes effect when the view is actually added to or removed from the hierarchy, **and** only when that change is animated.\n\n=> A transition on a view that merely changes size does nothing. That is the usual reason it 'does not work'." },
 
-    { d: 'hard', q: 'Give three reasons an animation silently does nothing.',
+    { d: 'hard', alias: 'Give three reasons an animation silently does nothing.', q: 'Your SwiftUI animation does nothing at all. What do you check?',
       a: "1. **The change was not animated.** A transition or geometry effect needs `withAnimation` or an `.animation(_, value:)` covering it\n2. **Identity changed.** The view was replaced, not updated, so there is nothing to interpolate\n3. **The property is not `Animatable`.** SwiftUI interpolates values conforming to `VectorArithmetic`; a custom property needs `animatableData`\n\n=> A fourth: the modifier is attached **above** the thing that changes, so the change never flows through it." },
 
     { d: 'medium', q: 'What is `Animatable` and when do you implement it?',
