@@ -48,7 +48,7 @@ work is saved per challenge as you type.
 **Mock interview** gives you an open-ended design prompt and a talk timer. Answer out loud
 first, then reveal the rubric and tick off what you actually covered.
 
-**The Gauntlet** is the boss run: 25 rapid-fire questions spread across all six domains,
+**The Gauntlet** is the boss run: 25 rapid-fire questions spread across all seven domains,
 three lives, fifteen seconds each. Consecutive correct answers build a score multiplier up
 to 4x, and one wrong answer or one timeout resets it and costs a life. Personal bests for
 score and combo are tracked.
@@ -126,7 +126,7 @@ Fenced code blocks take an optional label, so a rule can be shown rather than de
 ```
 ````
 
-40 cards carry a matched Avoid / Prefer pair, on the questions where seeing the wrong
+42 cards carry a matched Avoid / Prefer pair, on the questions where seeing the wrong
 version is what makes the right one stick.
 
 ## Diagrams
@@ -150,10 +150,10 @@ the whole mapping is readable in one place. It warns in the console if a mapping
 
 ## Design
 
-Neutral chassis, chromatic content. The greys are deliberately neutral so the six domain
+Neutral chassis, chromatic content. The greys are deliberately neutral so the seven domain
 hues carry the identity: blue, mint, amber, pink, red-orange, violet, cyan. Domain colour appears
 structurally, as spines on rows and fills in the readiness chart, never as decoration.
-Primary buttons are white, because a bright accent would compete with six domain colours.
+Primary buttons are white, because a bright accent would compete with seven domain colours.
 
 The overview leads with a readiness chart rather than a completion ring: one column per
 domain, height as mastery, so a glance tells you which domain will sink the interview.
