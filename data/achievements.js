@@ -82,11 +82,11 @@
     check: c => c.totals.mocks >= IPREP.mocks.length },
 
   { id: 'polyglot',    em: '🌐', name: 'Full Stack of iOS',   xp: 90,
-    desc: 'Study all six domains in a single day.',
-    check: c => c.day.domains.length >= 6 },
+    desc: 'Study every domain in a single day.',
+    check: c => c.day.domains.length >= Object.keys(IPREP.DOMAINS).length },
 
   { id: 'all-topics',  em: '🗺️', name: 'Cartographer',        xp: 140,
-    desc: 'Touch at least one card in all 30 topics.',
+    desc: 'Touch at least one card in every topic.',
     check: c => c.seenTopics >= IPREP.topics.length },
 
   { id: 'quests-1',    em: '✅', name: 'Full House',          xp: 70,
@@ -118,7 +118,7 @@
     check: c => c.masteredTopics() >= 10 },
 
   { id: 'mastery-all', em: '🏆', name: 'Interview Final Boss', xp: 500,
-    desc: 'Reach 80% overall mastery across all 30 topics.',
+    desc: 'Reach 80% overall mastery across all topics.',
     check: c => c.mastery() >= 0.8 },
 
   { id: 'night-owl',   em: '🦉', name: 'Night Owl',           xp: 30,

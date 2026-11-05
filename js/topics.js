@@ -1,4 +1,4 @@
-/* topics.js — browse all 30 topics, drill into one */
+/* topics.js — browse all topics, drill into one */
 window.VIEWS = window.VIEWS || {};
 
 (function () {
@@ -17,7 +17,8 @@ window.VIEWS = window.VIEWS || {};
   function list(p) {
     var only = p.domain || null;
     var h = '<div class="page-head"><h1>Topics</h1>' +
-      '<p>Thirty topics across six domains. Mastery is derived from how far out each card is scheduled, ' +
+      '<p>' + IPREP.topics.length + ' topics across ' + Object.keys(IPREP.DOMAINS).length + ' domains. ' +
+      'Mastery is derived from how far out each card is scheduled, ' +
       'so it only rises as you keep getting cards right over time.</p></div>';
 
     h += '<div class="filters">';
